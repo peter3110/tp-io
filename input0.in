@@ -1,0 +1,12 @@
+c kaldsfafa asdfas asdf
+c adsfasf asdf
+c adf dasf sdf
+p edge 4 8
+e 1 2
+e 1 4
+e 2 3
+e 1 3
+e 2 1
+e 4 1
+e 3 2
+e 3 1
