@@ -12,6 +12,9 @@ ILOSTLBEGIN
  *     random o quiero que se asigne 1 particion distinta a cada nodo
  * iii)proporcion de particiones / cantNodos (en caso de haber elegido random) --> 0 <= num <= 1
  * iv) "bb" o "cb", para elegir el algoritmo con el cual resolver
+ * v) epsilonClique --> 0 <= num <= 1
+ * vi) epsilonAgujero --> 0 <= num <= 1
+ * vii) numeroDeModelo --> 0 = Pedro, 1 = Santiago
 */
 
 /* Defino las constantes del problema */
@@ -95,6 +98,16 @@ void read(string randomness) {  // debo dividir a los vertices en 'porcentajePar
   }
 }
 
+int dameParticion(int vertice){
+  for(unsigned int i=0; i < S.size(); ++i){
+    if ( std::find(S.begin(), S.end(), vertice) != S.end() ){
+      return i;
+    }
+  }
+  ///en caso de error
+  return -1;
+}
+
 // ================================================================================
 
 int main(int argc, char **argv) {
@@ -108,6 +121,10 @@ int main(int argc, char **argv) {
   char labels[100];
   char test[100];
   string randomness = argv[2];
+  double epsilonClique = argv[5];
+  double epsilonAgujero = argv[6];
+  int numeroDeModelo = argv[7]
+
   if(randomness == "notrandom") { 
     sprintf(ejes, "ejes.out");
     sprintf(labels, "labels.out");
@@ -236,7 +253,7 @@ int main(int argc, char **argv) {
   // nzcnt = # de coeficientes != 0 a ser agregados a la matriz. Solo se pasan los valores que no son cero.
   
   int ccnt = 0;
-  int rcnt = P + (E/2)*P + 2*P;  // cantidad de restricciones !!!!! 
+  // int rcnt = P + (E/2)*P + 2*P;  // cantidad de restricciones !!!!!  TODO REVISAR ESTE NUMERO
                   // (E/2 porque en la entrada se supone que en la entrada me pasan 2 veces cada eje)
   int nzcnt = 0;  // al ppio es cero (para cada valor q agrego, lo voy a incrementar en 1)
 
@@ -247,6 +264,7 @@ int main(int argc, char **argv) {
   double *matval = new double[rcnt*n]; // Array que en la posicion i tiene coeficiente ( != 0) de la variable matind[i] en la restriccion.
 
   // CPLEX va a leer hasta la cantidad nzcnt que le pasemos.
+  int r = 0;  // r = numero de restriccion
 
   // i) P restricciones - exactamente un color a cada vertice (una restriccion por cada particion)
   for(int p=0; p<P; p++) {
@@ -262,15 +280,15 @@ int main(int argc, char **argv) {
         }
       }
     }
+    r++;
   }
 
   // ii) E*P restricciones mas (para cada eje, para cada color)
-  int r = P;  // r = numero de restriccion
   int cuenta = 0;
   for(int k=0; k<P; k++) {  // para cada color k
     for(int i=0; i<N; i++) {
       for(int j=i+1; j<N; j++) {  // para cada par de nodos
-        if(M[i][j] == 1) {     // si estan unidos por un eje
+        if(M[i][j] == 1 and dameParticion(i) != dameParticion(j)) {     // si estan unidos por un eje
           matbeg[r] = nzcnt;
           rhs[r]    = 1;
           sense[r]  = 'L';
@@ -286,33 +304,58 @@ int main(int argc, char **argv) {
     }
   }
 
+  // P + i*P + k
+  // k son la cantidad de colores
+  // P + i*P me salteo al casillero de la matriz
+  if(numeroDeModelo == 0){
 
-  // iii) 2*P restricciones mas
-  // r = numero actual de restriccion
-  for(int k=0; k<P; k++) {  // para cada color
-    matbeg[r] = nzcnt;
-    rhs[r] = 0;
-    sense[r] = 'L';
-    matind[nzcnt] = k; matval[nzcnt] = -1 * P; nzcnt++;
-    for(int i=0; i<N; i++) {
-      matind[nzcnt] = P + i*P + k; matval[nzcnt] = 1;
-      nzcnt++;
+    // iii) 2*P restricciones mas
+    // r = numero actual de restriccion
+    for(int k=0; k<P; k++) {  // para cada color
+      matbeg[r] = nzcnt;
+      rhs[r] = 0;
+      sense[r] = 'L';
+      matind[nzcnt] = k; matval[nzcnt] = -1 * P; nzcnt++; ///TODO: Ver lo del k que va sumando
+      for(int i=0; i<N; i++) {
+        matind[nzcnt] = P + i*P + k; matval[nzcnt] = 1;
+        nzcnt++;
 
+      }
+      r++;
     }
-    r++;
-  }
-  for(int k=0; k<P; k++) {
-    matbeg[r] = nzcnt;
-    rhs[r] = 0;
-    sense[r] = 'G';
-    matind[nzcnt] = k; matval[nzcnt] = -1; nzcnt++;
-    for(int i=0; i<N; i++) {
-      matind[nzcnt] = P + i*P + k; matval[nzcnt] = 1;
-      nzcnt++;
+
+    for(int k=0; k<P; k++) {
+      matbeg[r] = nzcnt;
+      rhs[r] = 0;
+      sense[r] = 'G';
+      matind[nzcnt] = k; matval[nzcnt] = -1; nzcnt++;
+      for(int i=0; i<N; i++) {
+        matind[nzcnt] = P + i*P + k; matval[nzcnt] = 1;
+        nzcnt++;
+      }
+      r++;
     }
-    r++;
+
+  }
+  else{
+    for(int k=0; k<P; k++) {  // para cada color
+      for(int i=0; i<N; i++) { // para cada nodo
+        matbeg[r] = nzcnt;
+        rhs[r] = 0;
+        sense[r] = 'L';
+        /// -wj + xij
+        matind[nzcnt] = k;            matval[nzcnt] = -1; nzcnt++; ///wj
+        matind[nzcnt] = P + i*P + k;  matval[nzcnt] = 1;  nzcnt++; ///xij
+        r++;
+      }
+    }
+
   }
 
+
+
+
+  int rcnt = r;
 
 
   // ===================================================================================================
@@ -321,8 +364,8 @@ int main(int argc, char **argv) {
   status = CPXaddrows(env, lp, ccnt, rcnt, nzcnt, rhs, sense, matbeg, matind, matval, NULL, NULL);
 
   if (status) {
-  cerr << "Problema agregando restricciones." << endl;
-  exit(1);
+    cerr << "Problema agregando restricciones." << endl;
+    exit(1);
   }
       
   delete[] rhs;
@@ -379,13 +422,6 @@ int main(int argc, char **argv) {
   // =========================================================================================================
   if(algoritmo == "cb") {
     
-    vector< vector<int> > cliques;  // cuando miro este vector tengo que chequear que cada entrada no sea vacia:
-          // puede pasar que el grafo analizado tengo menos que "cantCliquesBuscadas" cliques !
-    int cantCliquesBuscadas = 40;   // me devuelve 41 cliques
-    //cliques = find_Cliques(...);
-
-    cout << "La cantidad de cliques que tengo es: " << cliques.size() << endl;
-    
     // while (algo) ... resolver el lp, chequear si la restr inducida por la clique actual es violada. Seguir
       status = CPXlpopt(env, lp);
       double objval;
@@ -419,76 +455,78 @@ int main(int argc, char **argv) {
   string statstr(statstring);
   cout << endl << "Resultado de la optimizacion: " << statstring << endl;
   
-  if(solstat!=CPX_STAT_OPTIMAL){
-     //exit(1);
-  }  
+  if(solstat!=CPXMIP_OPTIMAL && solstat!=CPXMIP_OPTIMAL_TOL && solstat!=CPXMIP_NODE_LIM_FEAS && solstat!=CPXMIP_TIME_LIM_FEAS){
 
-  double objval;
-  status = CPXgetobjval(env, lp, &objval);
-    
-  if (status) {
-    cerr << "Problema obteniendo valor de mejor solucion." << endl;
-    exit(1);
-  }
-
-  cout << "Datos de la resolucion: " << "\t" << objval << "\t" << (endtime - inittime) << endl; 
-
-  
-  //std::string outputfile = "dieta.sol";
-  //ofstream solfile(outputfile.c_str());
-
-  // Tomamos los valores de todas las variables. Estan numeradas de 0 a n-1.
-  double *sol = new double[n];
-  status = CPXgetx(env, lp, sol, 0, n - 1);
-
-  if (status) {
-    cerr << "Problema obteniendo la solucion del LP." << endl;
-    exit(1);
-  }
-
-    
-  // Solo escribimos las variables distintas de cero (tolerancia, 1E-05).
-  //solfile << "Status de la solucion: " << statstr << endl;
-  for(int j=0; j<P; j++) {
-    if(sol[j] > TOL) {
-      //cout << "W_" << j << " = " << sol[j] << endl;
+    double objval;
+    status = CPXgetobjval(env, lp, &objval);
+      
+    if (status) {
+      cerr << "Problema obteniendo valor de mejor solucion." << endl;
+      exit(1);
     }
-  }
-  for(int i=0; i<N; i++) {
+
+    cout << "Datos de la resolucion: " << "\t" << objval << "\t" << (endtime - inittime) << endl; 
+
+    
+    //std::string outputfile = "dieta.sol";
+    //ofstream solfile(outputfile.c_str());
+
+    // Tomamos los valores de todas las variables. Estan numeradas de 0 a n-1.
+    double *sol = new double[n];
+    status = CPXgetx(env, lp, sol, 0, n - 1);
+
+    if (status) {
+      cerr << "Problema obteniendo la solucion del LP." << endl;
+      exit(1);
+    }
+
+      
+    // Solo escribimos las variables distintas de cero (tolerancia, 1E-05).
+    //solfile << "Status de la solucion: " << statstr << endl;
     for(int j=0; j<P; j++) {
-      if(sol[P + P*i + j] > TOL) {
-        //cout << "X_" << i << "_" << j << " = " << sol[P+P*i+j] << endl;
+      if(sol[j] > TOL) {
+        //cout << "W_" << j << " = " << sol[j] << endl;
       }
     }
-  }
-  
-  delete [] sol;
-  //solfile.close();
-
-  // ==================== Devuelvo el grafo resultante coloreado, para graficar! ====================== //
-  // Tomamos los valores de la solucion y los escribimos a un archivo.
-  streamEjes.open (ejes);
-  for(int v1=0; v1<N; v1++) {
-    for(int v2=v1+1; v2<N; v2++) {
-      if (M[v1][v2] == 1) { 
-        streamEjes << v1+1 << " " << v2+1 << endl;
-      }
-    }
-  } streamEjes.close();
-  cout << ejes << endl;
-  
-  streamLabels.open (labels);
-  int estaColoreado;
-  for(int v=0; v<N; v++) {
-      estaColoreado = 0;
+    for(int i=0; i<N; i++) {
       for(int j=0; j<P; j++) {
-        if (sol[P + P*v + j] == 1) {
-          streamLabels << v+1 << " " << j+1 << endl;
-          estaColoreado = 1;
+        if(sol[P + P*i + j] > TOL) {
+          //cout << "X_" << i << "_" << j << " = " << sol[P+P*i+j] << endl;
         }
       }
-      if(estaColoreado==0) { streamLabels << v+1 << " " << 0 << endl; }
-    } streamLabels.close();
+    }
+    
+    delete [] sol;
+    //solfile.close();
+
+    // ==================== Devuelvo el grafo resultante coloreado, para graficar! ====================== //
+    // Tomamos los valores de la solucion y los escribimos a un archivo.
+    streamEjes.open (ejes);
+    for(int v1=0; v1<N; v1++) {
+      for(int v2=v1+1; v2<N; v2++) {
+        if (M[v1][v2] == 1) { 
+          streamEjes << v1+1 << " " << v2+1 << endl;
+        }
+      }
+    } streamEjes.close();
+    cout << ejes << endl;
+    
+    streamLabels.open (labels);
+    int estaColoreado;
+    for(int v=0; v<N; v++) {
+        estaColoreado = 0;
+        for(int j=0; j<P; j++) {
+          if (sol[P + P*v + j] == 1) {
+            streamLabels << v+1 << " " << j+1 << endl;
+            estaColoreado = 1;
+          }
+        }
+        if(estaColoreado==0) { streamLabels << v+1 << " " << 0 << endl; }
+      } streamLabels.close();
+  }
+  else{
+    cout << "No hay solucion" << endl;
+  }
 
   return 0;
 }
