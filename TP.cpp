@@ -3,6 +3,8 @@
 ILOSTLBEGIN
 #include <string>
 #include <vector>
+#include <cstdlib>
+#include <algorithm>
 
 #define TOL 1E-05
 
@@ -10,7 +12,7 @@ ILOSTLBEGIN
  * i)  archivo .in del cual leer, en el formato especificado.
  * ii) "random" o "notrandom", dependiendo de si quiero que las P particiones sean
  *     random o quiero que se asigne 1 particion distinta a cada nodo
- * iii)proporcion de particiones / cantNodos (en caso de haber elegido random) --> 0 <= num <= 1
+ * iii)proporcion de particiones / cantNodos (en caso de haber elegido notrandom SE IGNORA) --> 0 <= num <= 1
  * iv) "bb" o "cb", para elegir el algoritmo con el cual resolver
  * v) epsilonClique --> 0 <= num <= 1
  * vi) epsilonAgujero --> 0 <= num <= 1
@@ -100,7 +102,7 @@ void read(string randomness) {  // debo dividir a los vertices en 'porcentajePar
 
 int dameParticion(int vertice){
   for(unsigned int i=0; i < S.size(); ++i){
-    if ( std::find(S.begin(), S.end(), vertice) != S.end() ){
+    if ( std::find(S[i].begin(), S[i].end(), vertice) != S[i].end() ){
       return i;
     }
   }
@@ -121,16 +123,16 @@ int main(int argc, char **argv) {
   char labels[100];
   char test[100];
   string randomness = argv[2];
-  double epsilonClique = argv[5];
-  double epsilonAgujero = argv[6];
-  int numeroDeModelo = argv[7]
+  double epsilonClique = atof(argv[5]);
+  double epsilonAgujero = atof(argv[6]);
+  int numeroDeModelo = atoi(argv[7]);
 
   if(randomness == "notrandom") { 
     sprintf(ejes, "ejes.out");
     sprintf(labels, "labels.out");
     sprintf(test, "%s%s", argv[1], argv[2]);
     read(randomness);   // cada elemento de la particion conformado por un unico nodo
-    algoritmo = argv[3];
+    algoritmo = argv[4];
   } else if (randomness == "random") {
     sprintf(ejes, "ejes.out");
     sprintf(labels, "labels.out");
@@ -142,6 +144,7 @@ int main(int argc, char **argv) {
     cout << "Paramtros mal introducidos" << endl;
     return 0;
   }
+
   // Le paso por parametro el algoritmo a implementar: bb = branch and bound, cb = cut and branch
   if(algoritmo != "bb" && algoritmo != "cb") {
     cout << "Error introduciendo parametro de algoritmo a ser aplicado " << endl;
@@ -165,8 +168,7 @@ int main(int argc, char **argv) {
     
   // Creo el LP.
   lp = CPXcreateprob(env, &status, "instancia coloreo de grafo particionado");
-
-    
+   
   if (lp == NULL) {
     cerr << "Error creando el LP" << endl;
     exit(1);
@@ -251,13 +253,14 @@ int main(int argc, char **argv) {
   // ccnt = numero nuevo de columnas en las restricciones.
   // rcnt = cuantas restricciones se estan agregando.
   // nzcnt = # de coeficientes != 0 a ser agregados a la matriz. Solo se pasan los valores que no son cero.
-  
+ 
   int ccnt = 0;
-  // int rcnt = P + (E/2)*P + 2*P;  // cantidad de restricciones !!!!!  TODO REVISAR ESTE NUMERO
+  int rcnt = P + (E/2)*P + 2*P;  // Cota maxima a la cantidad de restricciones !!!!!  TODO REVISAR ESTE NUMERO
                   // (E/2 porque en la entrada se supone que en la entrada me pasan 2 veces cada eje)
   int nzcnt = 0;  // al ppio es cero (para cada valor q agrego, lo voy a incrementar en 1)
 
   char sense[rcnt]; // Sentido de la desigualdad. 'G' es mayor o igual y 'E' para igualdad, 'L' menor o igual
+
   double *rhs = new double[rcnt]; // Termino independiente de las restricciones.
   int *matbeg = new int[rcnt];    //Posicion en la que comienza cada restriccion en matind y matval.
   int *matind = new int[rcnt*n];       // Array con los indices de las variables con coeficientes != 0 en la desigualdad.
@@ -315,7 +318,7 @@ int main(int argc, char **argv) {
       matbeg[r] = nzcnt;
       rhs[r] = 0;
       sense[r] = 'L';
-      matind[nzcnt] = k; matval[nzcnt] = -1 * P; nzcnt++; ///TODO: Ver lo del k que va sumando
+      matind[nzcnt] = k; matval[nzcnt] = -1 * P; nzcnt++;
       for(int i=0; i<N; i++) {
         matind[nzcnt] = P + i*P + k; matval[nzcnt] = 1;
         nzcnt++;
@@ -353,9 +356,8 @@ int main(int argc, char **argv) {
   }
 
 
-
-
-  int rcnt = r;
+  //Actualizarlo?
+  //int rcnt = r;
 
 
   // ===================================================================================================
