@@ -123,27 +123,24 @@ int main(int argc, char **argv) {
   char labels[100];
   char test[100];
   string randomness = argv[2];
+  porcentajeParticiones = atof(argv[3]);
+  algoritmo = argv[4];
   double epsilonClique = atof(argv[5]);
   double epsilonAgujero = atof(argv[6]);
   int numeroDeModelo = atoi(argv[7]);
 
+  sprintf(ejes, "ejes.out");
+  sprintf(labels, "labels.out");
   if(randomness == "notrandom") { 
-    sprintf(ejes, "ejes.out");
-    sprintf(labels, "labels.out");
     sprintf(test, "%s%s", argv[1], argv[2]);
-    read(randomness);   // cada elemento de la particion conformado por un unico nodo
-    algoritmo = argv[4];
   } else if (randomness == "random") {
-    sprintf(ejes, "ejes.out");
-    sprintf(labels, "labels.out");
     sprintf(test, "%s%s", argv[1], argv[3]);
-    porcentajeParticiones = atof(argv[3]);
-    read(randomness);
-    algoritmo = argv[4];
   } else {
     cout << "Paramtros mal introducidos" << endl;
     return 0;
   }
+
+  read(randomness); // cada elemento de la particion conformado por un unico nodo
 
   // Le paso por parametro el algoritmo a implementar: bb = branch and bound, cb = cut and branch
   if(algoritmo != "bb" && algoritmo != "cb") {
