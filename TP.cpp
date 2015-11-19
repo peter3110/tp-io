@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
     } else {
       objfun[i] = 0;  // los X[i][j] no contribuyen a la funcion objetivo
     }
-    xctype[i] = 'I';  // 'C' es continua, 'B' binaria, 'I' Entera.
+    xctype[i] = 'B';  // 'C' es continua, 'B' binaria, 'I' Entera.
     colnames[i] = new char[10];
   }
 
