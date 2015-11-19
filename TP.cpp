@@ -432,6 +432,17 @@ int main(int argc, char **argv) {
     // status = CPXchgprobtype(env, lp, CPXPROB_FIXEDMILP);
     // status = CPXmipopt(env,lp);
 
+    ///Cuando salimos, pasamos a binaria y corremos un branch and bound
+    char *ctype = new char[n];
+    for (int i = 0; i < n; i++) {
+      ctype[i] = 'B';
+    }
+
+    status = CPXcopyctype (env, lp, ctype);
+    delete[] ctype;
+
+    status = CPXmipopt(env,lp);
+
   } else if (algoritmo == "bb") {
     status = CPXmipopt(env,lp);
   } else {
