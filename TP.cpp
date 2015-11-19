@@ -455,7 +455,9 @@ int main(int argc, char **argv) {
   cout << endl << "Resultado de la optimizacion: " << statstring << endl;
   
   if(solstat!=CPXMIP_OPTIMAL && solstat!=CPXMIP_OPTIMAL_TOL && solstat!=CPXMIP_NODE_LIM_FEAS && solstat!=CPXMIP_TIME_LIM_FEAS){
-
+    cout << "No hay solucion" << endl;
+  }
+  else{
     double objval;
     status = CPXgetobjval(env, lp, &objval);
       
@@ -522,9 +524,6 @@ int main(int argc, char **argv) {
         }
         if(estaColoreado==0) { streamLabels << v+1 << " " << 0 << endl; }
       } streamLabels.close();
-  }
-  else{
-    cout << "No hay solucion" << endl;
   }
 
   return 0;
