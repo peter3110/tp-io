@@ -43,7 +43,7 @@ vector <vector <int> > S; // en S_p estan los vertices de la particion p.
 /*
  *
     Las variables se guardan:
-    w0,w1,...,w(P-1),x10,x11,...,x1(P-1),x20,x21,...,x2(P-1),..,xN0,xN1,...,xN(P-1)
+    w0,w1,...,w(P-1),x00,x01,...,x0(P-1),x10,x11,...,x1(P-1),..,x(N-1)0,x(N-1)1,...,x(N-1)(P-1)
     Es decir, primero los w que representan los colores.
     Luego ordenamos por variable, y dentro de cada variable ordenamos por color.
 
@@ -66,11 +66,10 @@ void read(string randomness) {  // debo dividir a los vertices en 'porcentajePar
     if(randomness == "notrandom") { P = N; }  // notrandom -> una particion por nodo
     
     // Asignacion de particiones (puede ser al azar o una particion para cada nodo)
-    int vp;
     if(randomness == "random") {
         S.resize(P);  // S guarda que vertices pertenecen a cada particion
         for(int v=0; v<N; v++) {  // asigno particiones al azar. Pueden haber particiones no asignadas
-            vp = rand() % P;
+            int vp = rand() % P;
             S[vp].push_back(v);
         }
         // tengo que eliminar los slots de S que quedan vacios, y decrementar P de forma acorde
@@ -87,14 +86,13 @@ void read(string randomness) {  // debo dividir a los vertices en 'porcentajePar
     } else if (randomness == "notrandom") {
         S.resize(N);
         for(int v=0; v<N; v++) {
-            vp = v;
-            S[vp].push_back(v);
+            S[v].push_back(v);
             //cout << v << " " << vp << endl;
         }
     } else {
         cout << "ERROR: parametros mal ingresados!" << endl;
     }
-    //cout << "Cantidad final de particiones: " << P << endl;
+    cout << "Cantidad final de particiones: " << P << endl;
 
     M.resize(N);
     for(int i=0; i<N; i++) { M[i].resize(N); } // M in NxN.
@@ -119,7 +117,7 @@ int dameParticion(int vertice){
 }
 
 ///Al principio me muevo en los indices del color por lo que lo muevo ese offset
-///Luego, usamos que a lo sumo uso P colores (P es la cantidad de particiones entonces a lo sumo tengo un P coloreo)
+///Luego, usamos que a lo sumo uso P colores (P es la cantidad de particiones, entonces a lo sumo tengo un P coloreo)
 ///Para ir al indice correcto, me voy hasta cantColoresPorVariable * indiceVariable
 ///Luego, sumo el indice del color para moverme al color correcto dentro de la variable
 int xijIndice(int indiceVariable, int indiceColor){
@@ -129,7 +127,7 @@ int xijIndice(int indiceVariable, int indiceColor){
 void agregarRestriccionClique(CPXENVptr env, CPXLPptr lp, std::vector<int> indicesClique, int numeroColor){
 
     // En total, son P + N*P variables ( las W[j] y las X[i][j] )
-    int n = P + N*P;
+    int cantVariables = P + N*P;
 
     int ccnt = 0;
     int rcnt = 1; //Agrego una sola restriccion
@@ -140,8 +138,8 @@ void agregarRestriccionClique(CPXENVptr env, CPXLPptr lp, std::vector<int> indic
 
     double *rhs = new double[rcnt]; // Termino independiente de las restricciones.
     int *matbeg = new int[rcnt];    //Posicion en la que comienza cada restriccion en matind y matval.
-    int *matind = new int[rcnt*n];       // Array con los indices de las variables con coeficientes != 0 en la desigualdad.
-    double *matval = new double[rcnt*n]; // Array que en la posicion i tiene coeficiente ( != 0) 
+    int *matind = new int[rcnt*cantVariables];       // Array con los indices de las variables con coeficientes != 0 en la desigualdad.
+    double *matval = new double[rcnt*cantVariables]; // Array que en la posicion i tiene coeficiente ( != 0) 
 
     ///Sumatoria de xij - wj
     matbeg[rcnt] = nzcnt;
@@ -173,28 +171,30 @@ void agregarRestriccionClique(CPXENVptr env, CPXLPptr lp, std::vector<int> indic
 
 int main(int argc, char **argv) {
 
+    if(not freopen(argv[1], "r", stdin)) {
+        return 1;
+    }
 
-    freopen(argv[1], "r", stdin);
-    ofstream streamEjes, streamLabels, streamParticiones;
     // freopen("output.out", "w", stdout);
 
     char ejes[100];
     char labels[100];
     char test[100];
-    string randomness = argv[2];
+    string randomness     = argv[2];
     porcentajeParticiones = atof(argv[3]);
-    algoritmo = argv[4];
-    double epsilonClique = atof(argv[5]);
+    algoritmo             = argv[4];
+    double epsilonClique  = atof(argv[5]);
     double epsilonAgujero = atof(argv[6]);
-    int numeroDeModelo = atoi(argv[7]);
+    int numeroDeModelo    = atoi(argv[7]);
 
     sprintf(ejes, "ejes.out");
     sprintf(labels, "labels.out");
     if(randomness == "notrandom") { 
         sprintf(test, "%s%s", argv[1], argv[2]);
-    } else if (randomness == "random") {
+    }
+    else if (randomness == "random") {
         sprintf(test, "%s%s", argv[1], argv[3]);
-    } else {
+    }else {
         cout << "Paramtros mal introducidos" << endl;
         return 0;
     }
@@ -211,12 +211,10 @@ int main(int argc, char **argv) {
 
     // Genero el problema de cplex.
     int status;
-    CPXENVptr env; // Puntero al entorno.
+    // Creo el entorno.
+    CPXENVptr env = CPXopenCPLEX(&status); // Puntero al entorno.
     CPXLPptr lp; // Puntero al LP
      
-    // Creo el entorno.
-    env = CPXopenCPLEX(&status);
-
     if (env == NULL) {
         cerr << "Error creando el entorno" << endl;
         exit(1);
@@ -231,16 +229,16 @@ int main(int argc, char **argv) {
     }
 
     // Definimos las variables. En total, son P + N*P variables ( las W[j] y las X[i][j] )
-    int n = P + N*P;
+    int cantVariables = P + N*P;
     double *ub, *lb, *objfun; // Cota superior, cota inferior, coeficiente de la funcion objetivo.
     char *xctype, **colnames; // tipo de la variable , string con el nombre de la variable.
-    ub = new double[n]; 
-    lb = new double[n];
-    objfun = new double[n];
-    xctype = new char[n];
-    colnames = new char*[n];
+    ub       = new double[cantVariables]; 
+    lb       = new double[cantVariables];
+    objfun   = new double[cantVariables];
+    xctype   = new char[cantVariables];
+    colnames = new char*[cantVariables];
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < cantVariables; i++) {
         ub[i] = 1.0; // seteo upper y lower bounds de cada variable
         lb[i] = 0.0;
         if(i < P) {  // agrego el costo en la funcion objetivo de cada variables
@@ -271,10 +269,10 @@ int main(int argc, char **argv) {
     // ========================== Agrego las columnas. =========================== //
     if(algoritmo == "cb" ) {
         // si quiero resolver la relajacion, agregar los cortes y despues resolver el MIP, no agrego xctype
-        status = CPXnewcols(env, lp, n, objfun, lb, ub, NULL, colnames);
+        status = CPXnewcols(env, lp, cantVariables, objfun, lb, ub, NULL, colnames);
     } else if (algoritmo == "bb") {
         // si quiero hacer MIP, directamente, con brancha and bound, agrego xctype
-        status = CPXnewcols(env, lp, n, objfun, lb, ub, xctype, colnames);
+        status = CPXnewcols(env, lp, cantVariables, objfun, lb, ub, xctype, colnames);
     } else {
         cout << "Error: parametro de algoritmo bb/cb mal introducido" << endl;
         return 0;
@@ -286,7 +284,7 @@ int main(int argc, char **argv) {
     }
     
     // Libero las estructuras.
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < cantVariables; i++) {
         delete[] colnames[i];
     }
 
@@ -311,7 +309,13 @@ int main(int argc, char **argv) {
     // nzcnt = # de coeficientes != 0 a ser agregados a la matriz. Solo se pasan los valores que no son cero.
  
     int ccnt = 0;
-    int rcnt = P + E*P + 2*P;  // Cota maxima a la cantidad de restricciones !!!!!  TODO REVISAR ESTE NUMERO
+    int rcnt;
+    if(numeroDeModelo == 0){
+        rcnt = P + (E*P)/2 + 2*P;  // Cota maxima a la cantidad de restricciones
+    }
+    else{
+        rcnt = P + (E*P)/2 + N*P;
+    }
                                     // (E/2 porque en la entrada se supone que en la entrada me pasan 2 veces cada eje)
     int nzcnt = 0;  // al ppio es cero (para cada valor q agrego, lo voy a incrementar en 1)
 
@@ -319,8 +323,10 @@ int main(int argc, char **argv) {
 
     double *rhs = new double[rcnt]; // Termino independiente de las restricciones.
     int *matbeg = new int[rcnt];    //Posicion en la que comienza cada restriccion en matind y matval.
-    int *matind = new int[rcnt*n];       // Array con los indices de las variables con coeficientes != 0 en la desigualdad.
-    double *matval = new double[rcnt*n]; // Array que en la posicion i tiene coeficiente ( != 0) de la variable matind[i] en la restriccion.
+    //cout << "hola" << endl;
+    int *matind = new int[rcnt*cantVariables];       // Array con los indices de las variables con coeficientes != 0 en la desigualdad.
+    //cout << "chau" << endl;
+    double *matval = new double[rcnt*cantVariables]; // Array que en la posicion i tiene coeficiente ( != 0) de la variable matind[i] en la restriccion.
 
     // CPLEX va a leer hasta la cantidad nzcnt que le pasemos.
     int cantRestricciones = 0;  // r = numero de restriccion
@@ -342,7 +348,7 @@ int main(int argc, char **argv) {
         cantRestricciones++;
     }
 
-    // ii) E*P restricciones mas (para cada eje, para cada color)
+    // ii) (E*P)/2 restricciones mas (para cada eje, para cada color pero solo cuando i < j)
     int cuenta = 0;
     for(int k=0; k<P; k++) {  // para cada color k
         for(int i=0; i<N; i++) {
@@ -391,7 +397,9 @@ int main(int argc, char **argv) {
             matbeg[cantRestricciones] = nzcnt;
             rhs[cantRestricciones] = 0;
             sense[cantRestricciones] = 'G';
-            matind[nzcnt] = k; matval[nzcnt] = -1; nzcnt++;
+            matind[nzcnt] = k;
+            matval[nzcnt] = -1;
+            nzcnt++;
             for(int i=0; i<N; i++) {
                 matind[nzcnt] = xijIndice(i,k);
                 matval[nzcnt] = 1;
@@ -402,15 +410,16 @@ int main(int argc, char **argv) {
 
     }
     else{
-        for(int k=0; k<P; k++) {  // para cada color
-            for(int i=0; i<N; i++) { // para cada nodo
+        for(int color = 0; color < P; color++) { 
+            for(int i = 0; i < N; i++) {
                 matbeg[cantRestricciones] = nzcnt;
                 rhs[cantRestricciones] = 0;
                 sense[cantRestricciones] = 'L';
                 /// -wj + xij
-                matind[nzcnt] = k;
+                matind[nzcnt] = color;
                 matval[nzcnt] = -1;
-                matind[nzcnt] = xijIndice(i, k);
+                nzcnt++;
+                matind[nzcnt] = xijIndice(i, color);
                 matval[nzcnt] = 1;
                 nzcnt++; ///xij
                 cantRestricciones++;
@@ -419,8 +428,8 @@ int main(int argc, char **argv) {
 
     }
 
-    //Actualizo rcnt
-    rcnt = cantRestricciones - 1;
+    //Actualizo rcnt.
+    rcnt = cantRestricciones;
 
 
     // ===================================================================================================
@@ -502,8 +511,8 @@ int main(int argc, char **argv) {
         // status = CPXmipopt(env,lp);
 
         ///Cuando salimos, pasamos a binaria y corremos un branch and bound
-        char *ctype = new char[n];
-        for (int i = 0; i < n; i++) {
+        char *ctype = new char[cantVariables];
+        for (int i = 0; i < cantVariables; i++) {
             ctype[i] = 'B';
         }
 
@@ -553,8 +562,8 @@ int main(int argc, char **argv) {
         //ofstream solfile(outputfile.c_str());
 
         // Tomamos los valores de todas las variables. Estan numeradas de 0 a n-1.
-        double *sol = new double[n];
-        status = CPXgetx(env, lp, sol, 0, n - 1);
+        double *sol = new double[cantVariables];
+        status = CPXgetx(env, lp, sol, 0, cantVariables - 1);
 
         if (status) {
             cerr << "Problema obteniendo la solucion del LP." << endl;
@@ -577,10 +586,11 @@ int main(int argc, char **argv) {
             }
         }
         
-        delete [] sol;
         //solfile.close();
 
         // ==================== Devuelvo el grafo resultante coloreado, para graficar! ====================== //
+        ofstream streamEjes, streamLabels;
+        //ofstream streamParticiones;
         // Tomamos los valores de la solucion y los escribimos a un archivo.
         streamEjes.open(ejes);
         for(int v1=0; v1<N; v1++) {
@@ -593,20 +603,22 @@ int main(int argc, char **argv) {
         cout << ejes << endl;
         
         streamLabels.open(labels);
-        int estaColoreado;
+        bool estaColoreado;
         for(int v=0; v<N; v++){
-            estaColoreado = 0;
+            estaColoreado = false;
             for(int j=0; j<P; j++){
                 if (sol[P + P*v + j] == 1) {
                     streamLabels << v+1 << " " << j+1 << endl;
-                    estaColoreado = 1;
+                    estaColoreado = true;
                 }
             }
-            if(estaColoreado ==0 ) {
+            if(not estaColoreado) {
                 streamLabels << v+1 << " " << 0 << endl;
             }
         }
         streamLabels.close();
+
+        delete [] sol;
     }
 
     return 0;
