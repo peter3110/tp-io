@@ -6,7 +6,8 @@ ILOSTLBEGIN
 #include <cstdlib>
 #include <algorithm>
 
-#define TOL 1E-05
+#define TOL 0.1
+#define TIEMPO_LIMITE 50
 
 /* INPUT: recibe 3 parametros: 
  * i)  archivo .in del cual leer, en el formato especificado.
@@ -25,6 +26,8 @@ int E; // CANTIDAD DE ARISTAS
 int P; // CANTIDAD DE PARTICIONES
 float porcentajeParticiones; // porcentaje de particiones que paso por parametro
 string algoritmo;
+int CANT_RESTR_CLIQUES = 5;
+int CANT_RESTR_AGUJEROS = 5;
 
 vector <vector <int> > M; // M_v1_v2 = 1 si (v1,v2) in E; 0 sino.
 vector <vector <int> > S; // en S_p estan los vertices de la particion p.
@@ -48,6 +51,70 @@ vector <vector <int> > S; // en S_p estan los vertices de la particion p.
     Luego ordenamos por variable, y dentro de cada variable ordenamos por color.
 
  */
+
+///Al principio me muevo en los indices del color por lo que lo muevo ese offset
+///Luego, usamos que a lo sumo uso P colores (P es la cantidad de particiones, entonces a lo sumo tengo un P coloreo)
+///Para ir al indice correcto, me voy hasta cantColoresPorVariable * indiceVariable
+///Luego, sumo el indice del color para moverme al color correcto dentro de la variable
+int xijIndice(int indiceVariable, int indiceColor){
+    return P + P * indiceVariable + indiceColor;
+}
+
+
+/// Ordena de menor a mayor
+bool ordenamientoPeso(const pair<int,double> &A, const pair<int,double> &B) {
+    return (A.second < B.second);
+}
+
+////
+vector<int> dameClique(double *sol, int color) {
+    vector<int> clique;
+    vector< pair< int, double > > vecinosPotenciales;
+    int indiceDelMasPesado = 0;
+    double pesoMax = 0;
+    for(int nodo=0; nodo<N; nodo++) {
+        if (sol[xijIndice(nodo,color)] > pesoMax) {
+            pesoMax = sol[xijIndice(nodo,color)];
+            indiceDelMasPesado = nodo;
+        }
+    }
+    //cout << pesoMax << endl;
+    if (pesoMax == 0) {return clique; }
+
+    double pesoAcumulado = pesoMax;
+    for(int vecino=0; vecino < N; vecino++) {
+        if(M[vecino][indiceDelMasPesado] == 1){
+            vecinosPotenciales.push_back(make_pair(vecino, sol[xijIndice(vecino,color)]));
+        }
+    }
+    sort(vecinosPotenciales.begin(), vecinosPotenciales.end(), ordenamientoPeso);
+    clique.push_back(indiceDelMasPesado);
+    while( not vecinosPotenciales.empty()) {
+        // agrego nuevo nodo a la clique
+        pair<int,double> vecinoAgregar = vecinosPotenciales[vecinosPotenciales.size() - 1];
+        clique.push_back( vecinoAgregar.first);
+        pesoAcumulado += vecinoAgregar.second;
+        vecinosPotenciales.pop_back();
+        // saco los nodos que nos son vecinos del nuevo nodo del 'vecinosPotenciales'
+        vector< pair<int, double> >::iterator it = vecinosPotenciales.begin();
+        while( it != vecinosPotenciales.end() ) {
+            if(M[it->first][vecinoAgregar.first] == 0) {
+                it = vecinosPotenciales.erase(it);
+            } else { 
+                it++; 
+            }
+        }
+    }
+    if (pesoAcumulado > 1.0 + TOL and clique.size() > 2) {
+        return clique;
+    } else {
+        return vector<int>(); 
+    }
+
+
+
+
+}
 
 // =================================================================================
 void read(string randomness) {  // debo dividir a los vertices en 'porcentajeParticiones' * N particiones
@@ -116,13 +183,6 @@ int dameParticion(int vertice){
     return -1;
 }
 
-///Al principio me muevo en los indices del color por lo que lo muevo ese offset
-///Luego, usamos que a lo sumo uso P colores (P es la cantidad de particiones, entonces a lo sumo tengo un P coloreo)
-///Para ir al indice correcto, me voy hasta cantColoresPorVariable * indiceVariable
-///Luego, sumo el indice del color para moverme al color correcto dentro de la variable
-int xijIndice(int indiceVariable, int indiceColor){
-    return P + P * indiceVariable + indiceColor;
-}
 
 void agregarRestriccionClique(CPXENVptr env, CPXLPptr lp, std::vector<int> indicesClique, int numeroColor){
 
@@ -461,7 +521,7 @@ int main(int argc, char **argv) {
     }
         
     // Setea el tiempo limite de ejecucion.
-    status = CPXsetdblparam(env, CPX_PARAM_TILIM, 50);  // setear en 3600 !!!!!!!
+    status = CPXsetdblparam(env, CPX_PARAM_TILIM, TIEMPO_LIMITE);  // setear limite de tiempo en 3600 !!!!!!!
     
     if (status) {
         cerr << "Problema seteando el tiempo limite" << endl;
@@ -489,6 +549,16 @@ int main(int argc, char **argv) {
     //Para que no se adicionen planos de corte:
     CPXsetintparam(env,CPX_PARAM_EACHCUTLIM, 0);
     CPXsetintparam(env, CPX_PARAM_FRACCUTS, -1);
+    CPXsetintparam(env, CPX_PARAM_LANDPCUTS, -1);
+
+    // Para que no haga preprocesamientos
+    CPXsetintparam(env, CPX_PARAM_PRESLVND, -1);
+    CPXsetintparam(env, CPX_PARAM_REPEATPRESOLVE, 0);
+    CPXsetintparam(env, CPX_PARAM_RELAXPREIND, 0);
+    CPXsetintparam(env, CPX_PARAM_REDUCE, 0);
+
+
+
 
 
     // =========================================================================================================
@@ -497,18 +567,59 @@ int main(int argc, char **argv) {
     if(algoritmo == "cb") {
         
         // while (algo) ... resolver el lp, chequear si la restr inducida por la clique actual es violada. Seguir
+        //cout << "antes" << endl;
+        
         status = CPXlpopt(env, lp);
+        
+        //cout << "despues" << endl;
         double objval;
         status = CPXgetobjval(env, lp, &objval);
         // Aca, deberia agregar los cortes requeridos, en funcion de "cliques" y "objval"
 
+        double *sol = new double[cantVariables];
+        CPXgetx(env, lp, sol, 0, cantVariables - 1);
+        bool estaColoreado;
+        for(int v=0; v<cantVariables; v++){
+            if (sol[v] > 0.00000001) {
+                    cout <<  sol[v] << " ";
+        
+            }
+        }
 
+/*
+        for(int v=0; v<N; v++){
+            estaColoreado = false;
+            for(int j=0; j<P; j++){
+                if (sol[P + P*v + j] > 0) {
+                    cout << v+1 << " " << j+1 << " " << sol[xijIndice(v,j)] << endl;
+                    estaColoreado = true;
+                }
+            }
+            if(not estaColoreado) {
+                cout << v+1 << " " << 0 << endl;
+            }
+        }
+*/
+        for(int color=0; color<P; color++) {
+            vector < vector<int> > agregados;
+            for(int i=0; i<CANT_RESTR_CLIQUES; i++) {
+                vector<int> clique = dameClique(sol, color);
+                sort(clique.begin(), clique.end());
+                bool incluido =  find(agregados.begin(), agregados.end(), clique) != agregados.end();
 
-
-        // y, al salir del while, hacer status = CPXmipopt(env,lp) --> donde a env,lp le agregue los cortes
-        // status = CPXnewcols(env, lp, n, objfun, lb, ub, xctype, colnames);
-        // status = CPXchgprobtype(env, lp, CPXPROB_FIXEDMILP);
-        // status = CPXmipopt(env,lp);
+                if (not incluido and (not clique.empty())) {
+                    agregados.push_back(clique);
+                    agregarRestriccionClique(env, lp, clique, color);
+                    cout << "AGREGO RESTRICCION de color : " << color << " ";
+                    for(int j=0; j<clique.size(); j++) {
+                        cout << clique[j] << " ";
+                    }
+                    cout << endl;
+                }
+            }
+        }
+        delete [] sol;
+        
 
         ///Cuando salimos, pasamos a binaria y corremos un branch and bound
         char *ctype = new char[cantVariables];
@@ -519,7 +630,9 @@ int main(int argc, char **argv) {
         status = CPXcopyctype (env, lp, ctype);
         delete[] ctype;
 
+        cout << "ANTES" << endl;
         status = CPXmipopt(env,lp);
+        cout << "DESPUES" << endl;
 
     } else if (algoritmo == "bb") {
         status = CPXmipopt(env,lp);
