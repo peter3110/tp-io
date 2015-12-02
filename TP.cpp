@@ -7,7 +7,7 @@ ILOSTLBEGIN
 #include <algorithm>
 
 #define TOL 0.1
-#define TIEMPO_LIMITE 50
+#define TIEMPO_LIMITE 300
 
 /* INPUT: recibe 3 parametros: 
  * i)  archivo .in del cual leer, en el formato especificado.
@@ -58,6 +58,51 @@ vector <vector <int> > S; // en S_p estan los vertices de la particion p.
 ///Luego, sumo el indice del color para moverme al color correcto dentro de la variable
 int xijIndice(int indiceVariable, int indiceColor){
     return P + P * indiceVariable + indiceColor;
+}
+
+
+void mostrameValores(CPXENVptr env, CPXLPptr lp){
+    
+    int cantVariables = P + N*P;
+
+    double *sol = new double[cantVariables];
+    CPXgetx(env, lp, sol, 0, cantVariables - 1);
+
+    cout << "Colores: " << endl;
+    for(int v = 0; v < P; v++){    
+        cout << sol[v] << " ";
+    }
+    cout << endl;
+
+    cout << "Nodos:" << endl;
+    for(int i = 0; i < N; i++){
+        std::cout << std::setw(2) << std::setfill('0') << i << " ";
+        for(int color = 0; color < P; color++){
+            cout << sol[xijIndice(i, color)] << " ";
+        }
+        cout << endl;
+    }
+    
+    /*for(int j=0; j<P; j++) {
+        if(sol[j] > 0.0001) {
+            cout << "W_" << j << " = " << sol[j] << endl;
+        }
+        else{
+            cout << "W_" << j << " = 0" << endl;
+        }
+    }
+    for(int i=0; i<N; i++) {
+        for(int j=0; j<P; j++) {
+            if(sol[P + P*i + j] > 0.0001) {
+                cout << "X_" << i << "_" << j << " = " << sol[P+P*i+j] << endl;
+            }
+            else{
+                cout << "X_" << i << "_" << j << " = 0" << endl;
+            }
+        }
+    }
+*/
+    delete [] sol;
 }
 
 
@@ -202,12 +247,14 @@ void agregarRestriccionClique(CPXENVptr env, CPXLPptr lp, std::vector<int> indic
     double *matval = new double[rcnt*cantVariables]; // Array que en la posicion i tiene coeficiente ( != 0) 
 
     ///Sumatoria de xij - wj
-    matbeg[rcnt] = nzcnt;
-    rhs[rcnt] = 0;
-    sense[rcnt] = 'L';
+    matbeg[0] = nzcnt;
+    rhs[0]    = 0;
+    sense[0]  = 'L';
+
     matind[nzcnt] = numeroColor;
     matval[nzcnt] = -1 * P;
     nzcnt++;
+
     for(int i = 0; i < indicesClique.size(); i++) {
         matind[nzcnt] = xijIndice(indicesClique[i], numeroColor);
         matval[nzcnt] = 1;
@@ -392,12 +439,12 @@ int main(int argc, char **argv) {
     int cantRestricciones = 0;  // r = numero de restriccion
 
     // i) P restricciones - exactamente un color a cada vertice (una restriccion por cada particion)
-    for(int p=0; p<P; p++) {
-        matbeg[p] = nzcnt;
-        rhs[p]    = 1  ;
-        sense[p]  = 'E';
+    for(int p = 0; p < P; p++) {
+        matbeg[cantRestricciones] = nzcnt;
+        rhs[cantRestricciones]    = 1  ;
+        sense[cantRestricciones]  = 'E';
         for(int i=0; i<N; i++) {  // para cada conjunto dentro de la particion, 'e' es el indice de un elemento en el cjto
-            for(int e=0; e<S[p].size() && S[p][e] == i; e++) {  // si el nodo i esta en el conjunto S[p] de la particion,
+            for(int e=0; e < S[p].size() && S[p][e] == i; e++) {  // si el nodo i esta en el conjunto S[p] de la particion,
                 for(int j=0; j<P; j++) {
                     matind[nzcnt] = xijIndice(i, j);
                     matval[nzcnt] = 1;
@@ -576,16 +623,10 @@ int main(int argc, char **argv) {
         status = CPXgetobjval(env, lp, &objval);
         // Aca, deberia agregar los cortes requeridos, en funcion de "cliques" y "objval"
 
+        mostrameValores(env, lp);
+
         double *sol = new double[cantVariables];
         CPXgetx(env, lp, sol, 0, cantVariables - 1);
-        bool estaColoreado;
-        for(int v=0; v<cantVariables; v++){
-            if (sol[v] > 0.00000001) {
-                    cout <<  sol[v] << " ";
-        
-            }
-        }
-
 /*
         for(int v=0; v<N; v++){
             estaColoreado = false;
@@ -600,17 +641,19 @@ int main(int argc, char **argv) {
             }
         }
 */
+
+        // CPXwriteprob (env, lp, "antesDeClique.lp", "LP");
         for(int color=0; color<P; color++) {
             vector < vector<int> > agregados;
             for(int i=0; i<CANT_RESTR_CLIQUES; i++) {
                 vector<int> clique = dameClique(sol, color);
                 sort(clique.begin(), clique.end());
-                bool incluido =  find(agregados.begin(), agregados.end(), clique) != agregados.end();
+                bool incluido = find(agregados.begin(), agregados.end(), clique) != agregados.end();
 
                 if (not incluido and (not clique.empty())) {
                     agregados.push_back(clique);
                     agregarRestriccionClique(env, lp, clique, color);
-                    cout << "AGREGO RESTRICCION de color : " << color << " ";
+                    cout << "AGREGO RESTRICCION de color #"<< color << ": ";
                     for(int j=0; j<clique.size(); j++) {
                         cout << clique[j] << " ";
                     }
@@ -627,16 +670,21 @@ int main(int argc, char **argv) {
             ctype[i] = 'B';
         }
 
+        cout << "Antes cambiar tipo" << endl;
         status = CPXcopyctype (env, lp, ctype);
+        cout << "Despues cambiar tipo" << endl;
         delete[] ctype;
 
         cout << "ANTES" << endl;
+        // CPXwriteprob (env, lp, "antesDeMip.lp", "LP");
         status = CPXmipopt(env,lp);
         cout << "DESPUES" << endl;
 
-    } else if (algoritmo == "bb") {
+    }
+    else if (algoritmo == "bb") {
         status = CPXmipopt(env,lp);
-    } else {
+    }
+    else {
         return 0;
     }
     
