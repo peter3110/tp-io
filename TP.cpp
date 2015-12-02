@@ -155,10 +155,6 @@ vector<int> dameClique(double *sol, int color) {
     } else {
         return vector<int>(); 
     }
-
-
-
-
 }
 
 // =================================================================================
@@ -228,7 +224,6 @@ int dameParticion(int vertice){
     return -1;
 }
 
-
 void agregarRestriccionClique(CPXENVptr env, CPXLPptr lp, std::vector<int> indicesClique, int numeroColor){
 
     // En total, son P + N*P variables ( las W[j] y las X[i][j] )
@@ -257,6 +252,51 @@ void agregarRestriccionClique(CPXENVptr env, CPXLPptr lp, std::vector<int> indic
 
     for(int i = 0; i < indicesClique.size(); i++) {
         matind[nzcnt] = xijIndice(indicesClique[i], numeroColor);
+        matval[nzcnt] = 1;
+        nzcnt++;
+    }
+
+    int status = CPXaddrows(env, lp, ccnt, rcnt, nzcnt, rhs, sense, matbeg, matind, matval, NULL, NULL);
+
+    if (status) {
+        cerr << "Problema agregando restricciones." << endl;
+        exit(1);
+    }
+
+    delete[] rhs;
+    delete[] matbeg;
+    delete[] matind;
+    delete[] matval;
+}
+
+void agregarRestriccionAgujero(CPXENVptr env, CPXLPptr lp, std::vector<int> indicesAgujero, int numeroColor){
+
+    // En total, son P + N*P variables ( las W[j] y las X[i][j] )
+    int cantVariables = P + N*P;
+
+    int ccnt = 0;
+    int rcnt = 1; //Agrego una sola restriccion
+
+    int nzcnt = 0;  // al ppio es cero (para cada valor q agrego, lo voy a incrementar en 1)
+
+    char sense[rcnt]; // Sentido de la desigualdad. 'G' es mayor o igual y 'E' para igualdad, 'L' menor o igual
+
+    double *rhs = new double[rcnt]; // Termino independiente de las restricciones.
+    int *matbeg = new int[rcnt];    //Posicion en la que comienza cada restriccion en matind y matval.
+    int *matind = new int[rcnt*cantVariables];       // Array con los indices de las variables con coeficientes != 0 en la desigualdad.
+    double *matval = new double[rcnt*cantVariables]; // Array que en la posicion i tiene coeficiente ( != 0) 
+
+    ///Sumatoria de xij - wj
+    matbeg[0] = nzcnt;
+    rhs[0]    = 0;
+    sense[0]  = 'L';
+
+    matind[nzcnt] = numeroColor;
+    matval[nzcnt] = -1 * ((indicesAgujero - 1) / 2);
+    nzcnt++;
+
+    for(int i = 0; i < indicesAgujero.size(); i++) {
+        matind[nzcnt] = xijIndice(indicesAgujero[i], numeroColor);
         matval[nzcnt] = 1;
         nzcnt++;
     }
