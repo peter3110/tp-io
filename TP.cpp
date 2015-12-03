@@ -5,6 +5,7 @@ ILOSTLBEGIN
 #include <vector>
 #include <cstdlib>
 #include <algorithm>
+#include <ctime>
 
 #define TOL 0.1
 #define TIEMPO_LIMITE 50
@@ -115,28 +116,33 @@ bool ordenamientoPeso(const pair<int,double> &A, const pair<int,double> &B) {
 }
 
 ////
-vector<int> dameClique(double *sol, int color) {
+vector<int> dameClique(double *sol, int color, bool random) {
     vector<int> clique;
     vector< pair< int, double > > vecinosPotenciales;
-    int indiceDelMasPesado = 0;
-    double pesoMax = 0;
-    for(int nodo=0; nodo<N; nodo++) {
-        if (sol[xijIndice(nodo,color)] > pesoMax) {
-            pesoMax = sol[xijIndice(nodo,color)];
-            indiceDelMasPesado = nodo;
+    int indicePrimerNodo = 0;
+    double pesoAcumulado;
+    if(random) {
+        indicePrimerNodo = rand() % N;
+    }else {
+        double pesoMax = 0;
+        for(int nodo=0; nodo<N; nodo++) {
+            if (sol[xijIndice(nodo,color)] > pesoMax) {
+                pesoMax = sol[xijIndice(nodo,color)];
+                indicePrimerNodo = nodo;
+            }
         }
-    }
-    //cout << pesoMax << endl;
-    if (pesoMax == 0) {return clique; }
+        //cout << pesoMax << endl;
+        if (pesoMax == 0) {return clique; }
 
-    double pesoAcumulado = pesoMax;
+        pesoAcumulado = pesoMax;
+    }
     for(int vecino=0; vecino < N; vecino++) {
-        if(M[vecino][indiceDelMasPesado] == 1){
+        if(M[vecino][indicePrimerNodo] == 1){
             vecinosPotenciales.push_back(make_pair(vecino, sol[xijIndice(vecino,color)]));
         }
     }
     sort(vecinosPotenciales.begin(), vecinosPotenciales.end(), ordenamientoPeso);
-    clique.push_back(indiceDelMasPesado);
+    clique.push_back(indicePrimerNodo);
     while( not vecinosPotenciales.empty()) {
         // agrego nuevo nodo a la clique
         pair<int,double> vecinoAgregar = vecinosPotenciales[vecinosPotenciales.size() - 1];
@@ -153,7 +159,7 @@ vector<int> dameClique(double *sol, int color) {
             }
         }
     }
-    if (pesoAcumulado > 1.0 + TOL and clique.size() > 2) {
+    if (pesoAcumulado > 1.0 + epsilonClique and clique.size() > 2) {
         return clique;
     } else {
         return vector<int>(); 
@@ -189,7 +195,7 @@ vector<int> dameAgujero(double *sol, int color) {
         pesoAcumulado += vecinoAgregar.second;
 
         if ( agujero.size() % 2 == 1 and M[agujero[0]][agujero[agujero.size()-1]] == 1 and
-                pesoAcumulado > (agujero.size()-1)/2 ) {
+                pesoAcumulado > (agujero.size()-1)/2 + epsilonAgujero) {
             mejorAgujero.clear();
             copy(agujero.begin(), agujero.end(), back_inserter(mejorAgujero));
         }
@@ -294,7 +300,7 @@ void agregarRestriccionClique(CPXENVptr env, CPXLPptr lp, std::vector<int> indic
 
         ///Sumatoria de xij - wj
         matbeg[0] = nzcnt;
-        rhs[0]    = epsilonClique;
+        rhs[0]    = 0;
         sense[0]  = 'L';
 
         matind[nzcnt] = numeroColor;
@@ -341,7 +347,7 @@ void agregarRestriccionAgujero(CPXENVptr env, CPXLPptr lp, std::vector<int> indi
 
         ///Sumatoria de xij - wj
         matbeg[0] = nzcnt;
-        rhs[0]    = epsilonAgujero;
+        rhs[0]    = 0;
         sense[0]  = 'L';
 
         matind[nzcnt] = numeroColor;
@@ -373,6 +379,7 @@ void agregarRestriccionAgujero(CPXENVptr env, CPXLPptr lp, std::vector<int> indi
 // ================================================================================
 
 int main(int argc, char **argv) {
+    srand(time(0));
 
     if(not freopen(argv[1], "r", stdin)) {
         return 1;
@@ -744,14 +751,15 @@ int main(int argc, char **argv) {
             vector < vector<int> > agregados;
             for(int color=0; color<P; color++) {
                 for(int i=0; i<CANT_RESTR_CLIQUES; i++) {
-                    vector<int> clique = dameClique(sol, color);
+                    bool iteracionRandom = (i!=0);
+                    vector<int> clique = dameClique(sol, color,iteracionRandom);
                     sort(clique.begin(), clique.end());
                     bool incluido = find(agregados.begin(), agregados.end(), clique) != agregados.end();
 
                     if (not incluido and (not clique.empty())) {
                         agregados.push_back(clique);
                         agregarRestriccionClique(env, lp, clique);
-                        cout << "AGREGO RESTRICCION DE CLIQUE de color #"<< color << ": ";
+                        cout << "AGREGO RESTRICCION DE CLIQUE de random " << iteracionRandom << " y de color #"<< color << ": ";
                         for(int j=0; j<clique.size(); j++) {
                             cout << clique[j] << " ";
                         }
