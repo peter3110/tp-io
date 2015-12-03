@@ -19,6 +19,8 @@ ILOSTLBEGIN
  * v) epsilonClique --> 0 <= num <= 1
  * vi) epsilonAgujero --> 0 <= num <= 1
  * vii) numeroDeModelo --> 0 = Pedro, 1 = Santiago
+ * viii) RECORRIDO_ARBOL = 0, 1
+ * ix) VARIABLE CORTE = -1, 0, 1
 */
 
 /* Defino las constantes del problema */
@@ -32,6 +34,8 @@ int CANT_RESTR_AGUJEROS = 5;
 int CANT_CICLOS_CB = 5;
 double epsilonClique;
 double epsilonAgujero;
+int RECORRIDO_ARBOL;
+int VARIABLE_CORTE;
 
 vector <vector <int> > M; // M_v1_v2 = 1 si (v1,v2) in E; 0 sino.
 vector <vector <int> > S; // en S_p estan los vertices de la particion p.
@@ -379,7 +383,7 @@ void agregarRestriccionAgujero(CPXENVptr env, CPXLPptr lp, std::vector<int> indi
 // ================================================================================
 
 int main(int argc, char **argv) {
-    srand(time(0));
+    srand(0);
 
     if(not freopen(argv[1], "r", stdin)) {
         return 1;
@@ -396,6 +400,8 @@ int main(int argc, char **argv) {
     epsilonClique  = atof(argv[5]);
     epsilonAgujero = atof(argv[6]);
     int numeroDeModelo    = atoi(argv[7]);
+    RECORRIDO_ARBOL = atoi(argv[8]);
+    VARIABLE_CORTE = atoi(argv[9]);
 
     sprintf(ejes, "ejes.out");
     sprintf(labels, "labels.out");
@@ -706,6 +712,12 @@ int main(int argc, char **argv) {
     CPXsetintparam(env, CPX_PARAM_REPEATPRESOLVE, 0);
     CPXsetintparam(env, CPX_PARAM_RELAXPREIND, 0);
     CPXsetintparam(env, CPX_PARAM_REDUCE, 0);
+
+    // Recorrido del arbol
+    CPXsetintparam(env, CPX_PARAM_NODESEL, RECORRIDO_ARBOL);
+
+    // Seleccion de variable
+    CPXsetintparam(env, CPX_PARAM_VARSEL, VARIABLE_CORTE); 
 
 
 
