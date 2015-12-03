@@ -28,6 +28,9 @@ float porcentajeParticiones; // porcentaje de particiones que paso por parametro
 string algoritmo;
 int CANT_RESTR_CLIQUES = 5;
 int CANT_RESTR_AGUJEROS = 5;
+int CANT_CICLOS_CB = 5;
+double epsilonClique;
+double epsilonAgujero;
 
 vector <vector <int> > M; // M_v1_v2 = 1 si (v1,v2) in E; 0 sino.
 vector <vector <int> > S; // en S_p estan los vertices de la particion p.
@@ -291,7 +294,7 @@ void agregarRestriccionClique(CPXENVptr env, CPXLPptr lp, std::vector<int> indic
 
         ///Sumatoria de xij - wj
         matbeg[0] = nzcnt;
-        rhs[0]    = 0;
+        rhs[0]    = epsilonClique;
         sense[0]  = 'L';
 
         matind[nzcnt] = numeroColor;
@@ -338,7 +341,7 @@ void agregarRestriccionAgujero(CPXENVptr env, CPXLPptr lp, std::vector<int> indi
 
         ///Sumatoria de xij - wj
         matbeg[0] = nzcnt;
-        rhs[0]    = 0;
+        rhs[0]    = epsilonAgujero;
         sense[0]  = 'L';
 
         matind[nzcnt] = numeroColor;
@@ -383,8 +386,8 @@ int main(int argc, char **argv) {
     string randomness     = argv[2];
     porcentajeParticiones = atof(argv[3]);
     algoritmo             = argv[4];
-    double epsilonClique  = atof(argv[5]);
-    double epsilonAgujero = atof(argv[6]);
+    epsilonClique  = atof(argv[5]);
+    epsilonAgujero = atof(argv[6]);
     int numeroDeModelo    = atoi(argv[7]);
 
     sprintf(ejes, "ejes.out");
@@ -709,7 +712,7 @@ int main(int argc, char **argv) {
         // while (algo) ... resolver el lp, chequear si la restr inducida por la clique actual es violada. Seguir
         //cout << "antes" << endl;
         
-        for(int ciclocb=0; ciclocb<5; ciclocb++) {
+        for(int ciclocb=0; ciclocb<CANT_CICLOS_CB; ciclocb++) {
             status = CPXlpopt(env, lp);
         
             //cout << "despues" << endl;
