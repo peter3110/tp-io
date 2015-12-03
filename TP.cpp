@@ -7,7 +7,7 @@ ILOSTLBEGIN
 #include <algorithm>
 
 #define TOL 0.1
-#define TIEMPO_LIMITE 300
+#define TIEMPO_LIMITE 50
 
 /* INPUT: recibe 3 parametros: 
  * i)  archivo .in del cual leer, en el formato especificado.
@@ -157,7 +157,54 @@ vector<int> dameClique(double *sol, int color) {
     }
 }
 
-// =================================================================================
+vector<int> dameAgujero(double *sol, int color) {
+    vector<int> agujero, mejorAgujero;
+    vector< pair< int, double > > vecinosPotenciales;
+    int indiceDelMasPesado = 0;
+    double pesoMax = 0;
+    for(int nodo=0; nodo<N; nodo++) {
+        if (sol[xijIndice(nodo,color)] > pesoMax) {
+            pesoMax = sol[xijIndice(nodo,color)];
+            indiceDelMasPesado = nodo;
+        }
+    }
+    //cout << pesoMax << endl;
+    if (pesoMax == 0) {return agujero; }
+
+    double pesoAcumulado = pesoMax;
+    for(int vecino=0; vecino < N; vecino++) {
+        if(M[vecino][indiceDelMasPesado] == 1){
+            vecinosPotenciales.push_back(make_pair(vecino, sol[xijIndice(vecino,color)]));
+        }
+    }
+    sort(vecinosPotenciales.begin(), vecinosPotenciales.end(), ordenamientoPeso);
+    agujero.push_back(indiceDelMasPesado);
+
+    while (not vecinosPotenciales.empty()) {
+        pair<int,double> vecinoAgregar = vecinosPotenciales[vecinosPotenciales.size() - 1];
+        agujero.push_back( vecinoAgregar.first);
+        pesoAcumulado += vecinoAgregar.second;
+
+        if ( agujero.size() % 2 == 1 and M[agujero[0]][agujero[agujero.size()-1]] == 1 and
+                pesoAcumulado > (agujero.size()-1)/2 ) {
+            mejorAgujero.clear();
+            copy(agujero.begin(), agujero.end(), back_inserter(mejorAgujero));
+        }
+
+        vecinosPotenciales.clear();
+
+        for(int vecino=0; vecino < N; vecino++) {
+            bool vecinoEnAgujero = find(agujero.begin(), agujero.end(), vecino) != agujero.end();
+            if(M[vecino][vecinoAgregar.first] == 1 and not vecinoEnAgujero){
+                vecinosPotenciales.push_back(make_pair(vecino, sol[xijIndice(vecino,color)]));
+            }
+        }
+        sort(vecinosPotenciales.begin(), vecinosPotenciales.end(), ordenamientoPeso);
+    }
+    return mejorAgujero;
+}
+
+//================================================================================= 
 void read(string randomness) {  // debo dividir a los vertices en 'porcentajeParticiones' * N particiones
 
     // me salteo las 3 primeras filas (asumo que todas las instancias vienen de esta forma)
@@ -224,94 +271,100 @@ int dameParticion(int vertice){
     return -1;
 }
 
-void agregarRestriccionClique(CPXENVptr env, CPXLPptr lp, std::vector<int> indicesClique, int numeroColor){
+void agregarRestriccionClique(CPXENVptr env, CPXLPptr lp, std::vector<int> indicesClique){
 
-    // En total, son P + N*P variables ( las W[j] y las X[i][j] )
-    int cantVariables = P + N*P;
+    for(int numeroColor=0; numeroColor<P; numeroColor++) {
+        // En total, son P + N*P variables ( las W[j] y las X[i][j] )
+        int cantVariables = P + N*P;
 
-    int ccnt = 0;
-    int rcnt = 1; //Agrego una sola restriccion
+        int ccnt = 0;
+        int rcnt = 1; //Agrego una sola restriccion
 
-    int nzcnt = 0;  // al ppio es cero (para cada valor q agrego, lo voy a incrementar en 1)
+        int nzcnt = 0;  // al ppio es cero (para cada valor q agrego, lo voy a incrementar en 1)
 
-    char sense[rcnt]; // Sentido de la desigualdad. 'G' es mayor o igual y 'E' para igualdad, 'L' menor o igual
+        char sense[rcnt]; // Sentido de la desigualdad. 'G' es mayor o igual y 'E' para igualdad, 'L' menor o igual
 
-    double *rhs = new double[rcnt]; // Termino independiente de las restricciones.
-    int *matbeg = new int[rcnt];    //Posicion en la que comienza cada restriccion en matind y matval.
-    int *matind = new int[rcnt*cantVariables];       // Array con los indices de las variables con coeficientes != 0 en la desigualdad.
-    double *matval = new double[rcnt*cantVariables]; // Array que en la posicion i tiene coeficiente ( != 0) 
+        double *rhs = new double[rcnt]; // Termino independiente de las restricciones.
+        int *matbeg = new int[rcnt];    //Posicion en la que comienza cada restriccion en matind y matval.
+        int *matind = new int[rcnt*cantVariables];       // Array con los indices de las variables con coeficientes != 0 en la desigualdad.
+        double *matval = new double[rcnt*cantVariables]; // Array que en la posicion i tiene coeficiente ( != 0) 
 
-    ///Sumatoria de xij - wj
-    matbeg[0] = nzcnt;
-    rhs[0]    = 0;
-    sense[0]  = 'L';
+        ///Sumatoria de xij - wj
+        matbeg[0] = nzcnt;
+        rhs[0]    = 0;
+        sense[0]  = 'L';
 
-    matind[nzcnt] = numeroColor;
-    matval[nzcnt] = -1 * P;
-    nzcnt++;
-
-    for(int i = 0; i < indicesClique.size(); i++) {
-        matind[nzcnt] = xijIndice(indicesClique[i], numeroColor);
-        matval[nzcnt] = 1;
+        matind[nzcnt] = numeroColor;
+        matval[nzcnt] = -1;
         nzcnt++;
+
+        for(int i = 0; i < indicesClique.size(); i++) {
+            matind[nzcnt] = xijIndice(indicesClique[i], numeroColor);
+            matval[nzcnt] = 1;
+            nzcnt++;
+        }
+
+        int status = CPXaddrows(env, lp, ccnt, rcnt, nzcnt, rhs, sense, matbeg, matind, matval, NULL, NULL);
+
+        if (status) {
+            cerr << "Problema agregando restricciones." << endl;
+            exit(1);
+        }
+
+        delete[] rhs;
+        delete[] matbeg;
+        delete[] matind;
+        delete[] matval;
     }
-
-    int status = CPXaddrows(env, lp, ccnt, rcnt, nzcnt, rhs, sense, matbeg, matind, matval, NULL, NULL);
-
-    if (status) {
-        cerr << "Problema agregando restricciones." << endl;
-        exit(1);
-    }
-
-    delete[] rhs;
-    delete[] matbeg;
-    delete[] matind;
-    delete[] matval;
 }
 
-void agregarRestriccionAgujero(CPXENVptr env, CPXLPptr lp, std::vector<int> indicesAgujero, int numeroColor){
+void agregarRestriccionAgujero(CPXENVptr env, CPXLPptr lp, std::vector<int> indicesAgujero){
 
+    for(int numeroColor = 0; numeroColor < P; numeroColor++) {
     // En total, son P + N*P variables ( las W[j] y las X[i][j] )
-    int cantVariables = P + N*P;
+        int cantVariables = P + N*P;
 
-    int ccnt = 0;
-    int rcnt = 1; //Agrego una sola restriccion
+        int ccnt = 0;
+        int rcnt = 1; //Agrego una sola restriccion
 
-    int nzcnt = 0;  // al ppio es cero (para cada valor q agrego, lo voy a incrementar en 1)
+        int nzcnt = 0;  // al ppio es cero (para cada valor q agrego, lo voy a incrementar en 1)
 
-    char sense[rcnt]; // Sentido de la desigualdad. 'G' es mayor o igual y 'E' para igualdad, 'L' menor o igual
+        char sense[rcnt]; // Sentido de la desigualdad. 'G' es mayor o igual y 'E' para igualdad, 'L' menor o igual
 
-    double *rhs = new double[rcnt]; // Termino independiente de las restricciones.
-    int *matbeg = new int[rcnt];    //Posicion en la que comienza cada restriccion en matind y matval.
-    int *matind = new int[rcnt*cantVariables];       // Array con los indices de las variables con coeficientes != 0 en la desigualdad.
-    double *matval = new double[rcnt*cantVariables]; // Array que en la posicion i tiene coeficiente ( != 0) 
+        double *rhs = new double[rcnt]; // Termino independiente de las restricciones.
+        int *matbeg = new int[rcnt];    //Posicion en la que comienza cada restriccion en matind y matval.
+        int *matind = new int[rcnt*cantVariables];       // Array con los indices de las variables con coeficientes != 0 en la desigualdad.
+        double *matval = new double[rcnt*cantVariables]; // Array que en la posicion i tiene coeficiente ( != 0) 
 
-    ///Sumatoria de xij - wj
-    matbeg[0] = nzcnt;
-    rhs[0]    = 0;
-    sense[0]  = 'L';
+        ///Sumatoria de xij - wj
+        matbeg[0] = nzcnt;
+        rhs[0]    = 0;
+        sense[0]  = 'L';
 
-    matind[nzcnt] = numeroColor;
-    matval[nzcnt] = -1 * ((indicesAgujero - 1) / 2);
-    nzcnt++;
+        matind[nzcnt] = numeroColor;
 
-    for(int i = 0; i < indicesAgujero.size(); i++) {
-        matind[nzcnt] = xijIndice(indicesAgujero[i], numeroColor);
-        matval[nzcnt] = 1;
+        int k = -1 * ((indicesAgujero.size() - 1) / 2);
+        matval[nzcnt] = k;
         nzcnt++;
+
+        for(int i = 0; i < indicesAgujero.size(); i++) {
+            matind[nzcnt] = xijIndice(indicesAgujero[i], numeroColor);
+            matval[nzcnt] = 1;
+            nzcnt++;
+        }
+
+        int status = CPXaddrows(env, lp, ccnt, rcnt, nzcnt, rhs, sense, matbeg, matind, matval, NULL, NULL);
+
+        if (status) {
+            cerr << "Problema agregando restricciones." << endl;
+            exit(1);
+        }
+
+        delete[] rhs;
+        delete[] matbeg;
+        delete[] matind;
+        delete[] matval;
     }
-
-    int status = CPXaddrows(env, lp, ccnt, rcnt, nzcnt, rhs, sense, matbeg, matind, matval, NULL, NULL);
-
-    if (status) {
-        cerr << "Problema agregando restricciones." << endl;
-        exit(1);
-    }
-
-    delete[] rhs;
-    delete[] matbeg;
-    delete[] matind;
-    delete[] matval;
 }
 
 // ================================================================================
@@ -656,52 +709,76 @@ int main(int argc, char **argv) {
         // while (algo) ... resolver el lp, chequear si la restr inducida por la clique actual es violada. Seguir
         //cout << "antes" << endl;
         
-        status = CPXlpopt(env, lp);
+        for(int ciclocb=0; ciclocb<5; ciclocb++) {
+            status = CPXlpopt(env, lp);
         
-        //cout << "despues" << endl;
-        double objval;
-        status = CPXgetobjval(env, lp, &objval);
-        // Aca, deberia agregar los cortes requeridos, en funcion de "cliques" y "objval"
+            //cout << "despues" << endl;
+            double objval;
+            status = CPXgetobjval(env, lp, &objval);
+            // Aca, deberia agregar los cortes requeridos, en funcion de "cliques" y "objval"
 
-        mostrameValores(env, lp);
+            mostrameValores(env, lp);
 
-        double *sol = new double[cantVariables];
-        CPXgetx(env, lp, sol, 0, cantVariables - 1);
-/*
-        for(int v=0; v<N; v++){
-            estaColoreado = false;
-            for(int j=0; j<P; j++){
-                if (sol[P + P*v + j] > 0) {
-                    cout << v+1 << " " << j+1 << " " << sol[xijIndice(v,j)] << endl;
-                    estaColoreado = true;
-                }
-            }
-            if(not estaColoreado) {
-                cout << v+1 << " " << 0 << endl;
-            }
-        }
-*/
-
-        // CPXwriteprob (env, lp, "antesDeClique.lp", "LP");
-        for(int color=0; color<P; color++) {
-            vector < vector<int> > agregados;
-            for(int i=0; i<CANT_RESTR_CLIQUES; i++) {
-                vector<int> clique = dameClique(sol, color);
-                sort(clique.begin(), clique.end());
-                bool incluido = find(agregados.begin(), agregados.end(), clique) != agregados.end();
-
-                if (not incluido and (not clique.empty())) {
-                    agregados.push_back(clique);
-                    agregarRestriccionClique(env, lp, clique, color);
-                    cout << "AGREGO RESTRICCION de color #"<< color << ": ";
-                    for(int j=0; j<clique.size(); j++) {
-                        cout << clique[j] << " ";
+            double *sol = new double[cantVariables];
+            CPXgetx(env, lp, sol, 0, cantVariables - 1);
+            /*
+                    for(int v=0; v<N; v++){
+                        estaColoreado = false;
+                        for(int j=0; j<P; j++){
+                            if (sol[P + P*v + j] > 0) {
+                                cout << v+1 << " " << j+1 << " " << sol[xijIndice(v,j)] << endl;
+                                estaColoreado = true;
+                            }
+                        }
+                        if(not estaColoreado) {
+                            cout << v+1 << " " << 0 << endl;
+                        }
                     }
-                    cout << endl;
+            */
+
+            //CPXwriteprob (env, lp, "antesDeClique.lp", "LP");
+            // BUSCAR Y AGREGAR CLIQUE
+            vector < vector<int> > agregados;
+            for(int color=0; color<P; color++) {
+                for(int i=0; i<CANT_RESTR_CLIQUES; i++) {
+                    vector<int> clique = dameClique(sol, color);
+                    sort(clique.begin(), clique.end());
+                    bool incluido = find(agregados.begin(), agregados.end(), clique) != agregados.end();
+
+                    if (not incluido and (not clique.empty())) {
+                        agregados.push_back(clique);
+                        agregarRestriccionClique(env, lp, clique);
+                        cout << "AGREGO RESTRICCION DE CLIQUE de color #"<< color << ": ";
+                        for(int j=0; j<clique.size(); j++) {
+                            cout << clique[j] << " ";
+                        }
+                        cout << endl;
+                    }
                 }
             }
+
+            // BUSCAR Y AGREGAR AGUJERO
+            agregados.clear();
+            for(int color=0; color<P; color++) {
+                for(int i=0; i<CANT_RESTR_AGUJEROS; i++) {
+                    vector<int> agujero = dameAgujero(sol, color);
+
+                    bool incluido = find(agregados.begin(), agregados.end(), agujero) != agregados.end();
+                    if (not incluido and not agujero.empty()) {
+                        agregados.push_back(agujero);
+                        agregarRestriccionAgujero(env, lp, agujero);
+                        cout << "AGREGO RESTRICCION DE AGUJERO de color #"<< color << ": ";
+                        for(int j=0; j<agujero.size(); j++) {
+                            cout << agujero[j] << " ";
+                        }
+                        cout << endl;
+                    }
+                }
+            }
+
+
+            delete [] sol;
         }
-        delete [] sol;
         
 
         ///Cuando salimos, pasamos a binaria y corremos un branch and bound
@@ -716,7 +793,7 @@ int main(int argc, char **argv) {
         delete[] ctype;
 
         cout << "ANTES" << endl;
-        // CPXwriteprob (env, lp, "antesDeMip.lp", "LP");
+        //CPXwriteprob (env, lp, "antesDeMip.lp", "LP");
         status = CPXmipopt(env,lp);
         cout << "DESPUES" << endl;
 
