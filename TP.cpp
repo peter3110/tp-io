@@ -236,15 +236,23 @@ void read(string randomness) {  // debo dividir a los vertices en 'porcentajePar
     // me salteo las 3 primeras filas (asumo que todas las instancias vienen de esta forma)
     string line; char c;
     // (segun el formato de los casos de prueba) - salteo las 'c', la 'p' y el 'edge'
-    while(cin>>line) { if (line == "p") break; }
+    while(cin>>line) {
+        if (line == "p"){
+            break;
+        }
+    }
     cin >> line;
     
     cin >> N >> E;
 
-    if(randomness == "random") {  // random -> me pasaron por parametro cuantas particiones se 
-        P = porcentajeParticiones * N;    //       aceptan como maximo
-    }
-    if(randomness == "notrandom") { P = N; }  // notrandom -> una particion por nodo
+    // random -> me pasaron por parametro cuantas particiones se aceptan como maximo
+    // notrandom -> una particion por nodo
+    if(randomness == "random") {  
+        P = porcentajeParticiones * N;
+    }    
+    else if(randomness == "notrandom") {
+        P = N;
+    }  
     
     // Asignacion de particiones (puede ser al azar o una particion para cada nodo)
     if(randomness == "random") {
@@ -254,30 +262,37 @@ void read(string randomness) {  // debo dividir a los vertices en 'porcentajePar
             S[vp].push_back(v);
         }
         // tengo que eliminar los slots de S que quedan vacios, y decrementar P de forma acorde
-        int count =0;
+        int count = 0;
         vector< vector<int> >::iterator it = S.begin();
         while( it != S.end() ) {
             if(it->empty()) {
                 it = S.erase(it);
                 count++;
-            } else { it++; }
+            }
+            else {
+                it++;
+            }
         }
         P = P - count;
     
-    } else if (randomness == "notrandom") {
+    }
+    else if (randomness == "notrandom") {
         S.resize(N);
         for(int v=0; v<N; v++) {
             S[v].push_back(v);
-            //cout << v << " " << vp << endl;
         }
-    } else {
+    }
+    else {
         cout << "ERROR: parametros mal ingresados!" << endl;
     }
+
     cout << "Cantidad final de particiones: " << P << endl;
 
     M.resize(N);
-    for(int i=0; i<N; i++) { M[i].resize(N); } // M in NxN.
-    // v_i = 1...N ----> v_i = 0...N-1
+    for(int i=0; i<N; i++) {
+        M[i].resize(N);
+    } // M in NxN. v_i = 1...N ----> v_i = 0...N-1
+
     int v1, v2;
     for(int e=0; e<E; e++) {  // para cada eje, guardo los nodos de sus extremos.
         cin >> c >> v1 >> v2; // (formato) - leo el caracter extra que hay adelante
@@ -293,7 +308,7 @@ int dameParticion(int vertice){
             return i;
         }
     }
-    ///en caso de error
+    ///en caso que el nodo no exista
     return -1;
 }
 
@@ -392,20 +407,53 @@ void agregarRestriccionAgujero(CPXENVptr env, CPXLPptr lp, std::vector<int> indi
         delete[] matval;
     }
 }
+
+
+void impresionModelo(CPXENVptr env, CPXLPptr lp){
+
+    string nombreArchivoSalida = "salida.out";
+    ofstream fout;
+    fout.open(nombreArchivoSalida.c_str());
+
+    double objval;
+    CPXgetobjval(env, lp, &objval);
+
+    fout << "[Datos del problema]" << endl;
+    fout << "archivoInput=" << archivoInput << endl;
+    fout << "randomness=" << randomness << endl;
+    fout << "porcentajeParticiones=" << porcentajeParticiones << endl;
+    fout << "algoritmo=" << algoritmo << endl;
+    fout << "epsilonClique=" << epsilonClique << endl;
+    fout << "epsilonAgujero=" << epsilonAgujero << endl;
+    fout << "numeroDeModelo=" << numeroDeModelo << endl;
+    fout << "RECORRIDO_ARBOL=" << RECORRIDO_ARBOL << endl;
+    fout << "VARIABLE_CORTE=" << VARIABLE_CORTE << endl;
+    fout << endl;
+
+    fout << "[Datos extra]" << endl;
+    fout << "Cant Nodos=" << N << endl;
+    fout << "Cant Aristas=" << E/2 << endl;
+    ///Maximo numero de aristas es n * (n-1) / 2
+    ///Tengo E/2 aristas (ya que vienen repetidas)
+    fout << "Porcentaje de aristas=" << double(E) / double(N * (N-1)) << endl;
+    fout << endl;
+
+    fout << "[Resultados]" << endl;
+    fout << "Funcion objetivo=" << objval << endl;
+    fout << "Tiempo en preparar=" << tiempoPreparar << endl; 
+    fout << "Tiempo en CB=" << tiempoCutAndBranch << endl; 
+    fout << "Tiempo en BB=" << tiempoBranchAndBound << endl; 
+    fout << "Tiempo Total=" << tiempoPreparar + tiempoCutAndBranch + tiempoBranchAndBound << endl; 
+
+
+    fout.close();
+}
+
 /*
-void impresionModelo(){
+tiempoPreparar
+tiempoCutAndBranch
+tiempoBranchAndBound
 
-
-
-    archivoInput          
-    randomness            
-    porcentajeParticiones 
-    algoritmo             
-    epsilonClique         
-    epsilonAgujero        
-    numeroDeModelo        
-    RECORRIDO_ARBOL       
-    VARIABLE_CORTE        
 
 }
 */
@@ -888,6 +936,8 @@ int main(int argc, char **argv) {
             cerr << "Problema obteniendo la solucion del LP." << endl;
             exit(1);
         }
+
+        impresionModelo(env, lp);
 
             
         // Solo escribimos las variables distintas de cero (tolerancia, 1E-05).
