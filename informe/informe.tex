@@ -20,13 +20,38 @@
 \usepackage{listings}
 \usepackage[toc, page]{appendix}
 \usepackage{color}
+\usepackage{listings}
 
+\lstset{language=C++} 
+
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\lstdefinestyle{customc++}{
+    backgroundcolor=\color{lbcolor},
+    tabsize=4,
+  language=C++,
+  captionpos=b,
+  tabsize=3,
+  frame=lines,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=5pt,
+  breaklines=true,
+  showstringspaces=false,
+  basicstyle=\footnotesize,
+%  identifierstyle=\color{magenta},
+  keywordstyle=\color[rgb]{0,0,1},
+  %commentstyle=\color{green},
+  stringstyle=\color{red}
+}
+
+\lstset{escapechar=@,style=customc++}
 
 %%%%%%%%%% Configuración de Fancyhdr - Inicio %%%%%%%%%%
 \pagestyle{fancy}
 \thispagestyle{fancy}
 \lhead{Trabajo Práctico · Investigación Operativa}
-\rhead{Aboy Solanes · COMPLETAR}
+\rhead{Aboy Solanes · Rodriguez}
 \renewcommand{\footrulewidth}{0.4pt}
 \cfoot{\thepage /\pageref{LastPage}}
 
@@ -127,7 +152,7 @@ Segundo Cuatrimestre de 2015
 Apellido y Nombre & LU & E-mail\\
 \hline
 Santiago Aboy Solanes & 175/12 & santiaboy2@hotmail.com \\
-Pedro COMPLETAR & COMP/ETAR & COMPLETAR@COMPLETAR.com \\
+Pedro Rodriguez & COMPL/ETAR & pedro3110.jim@gmail.com \\
 \hline
 \end{tabular}
 
@@ -140,15 +165,15 @@ Pedro COMPLETAR & COMP/ETAR & COMPLETAR@COMPLETAR.com \\
 \newpage
 
 
-%\section{Introducción}
+\section{Introducción}
 
-%\section{Desarrollo}
+El problema de coloreo particionado de grafos es una generalización del problema de coloreo de grafos. Al igual que en coloreo, se tiene un grafo $G = (V,E)$ siendo $V$ los nodos del grafo y $E$ sus aristas.
 
-%\subsection{Decisiones tomadas}
+En coloreo particionado, el conjunto $V$ se encuentra dividido en una partición $V_1, \ldots, V_k$. El objetivo es asignar un color a sólo un vértice de cada partición de manera tal que dos vértices adyacentes no reciban el mismo color, minimizando la cantidad de colores utilizados.
 
-%\subsection{Problemas encontrados}
+\section{Modelos Utilizados}
 
-%\subsection{Conclusiones}
+En este trabajo práctico desarrollamos dos modelos distintos (Modelo Pedro y Modelo Santiago) basándonos en las mismas variables:
 
 \[
  x_{pj} =
@@ -167,14 +192,307 @@ Pedro COMPLETAR & COMP/ETAR & COMPLETAR@COMPLETAR.com \\
   \end{cases}
 \]
 
+\subsection{Modelo Pedro}
+
+\textit{Aclaracion:} (1) y (2) no son escalares sino que van a ser usados para referenciar a las inecuaciones en las demostraciones.
+
+\label{modelo-pedro}
+
+$Min \sum_{j=1}^{n} w_j$ sujeto a:
 \begin{align*}
-Min \sum_{j=1}^{n} w_j \qquad & s.a.:\\
-\sum_{v_i \in V_p}\sum_{j=1}^{n} x_{ij} \qquad & \forall \ V_p \in \{V_1, \ldots, V_k\} \text{//un nodo coloreado por particion}\\
-x_{ij} + x_{i'j} \leq 1 \qquad & \forall \ (i,i') \in X, \ \forall \ j = 1, \ldots, n \text{//nodos adyacentes no tienen el mismo color}\\
-x_{ij} \leq w_j \qquad & \forall \ v_i \in V, \ \forall \ j=1,\ldots,n \text{//desigualdad color vs nodos con ese color}\\
+(1)\ \sum_{v_i \in V_p}\sum_{j=1}^{n} x_{ij} = 1 \qquad & \forall \ V_p \in \{V_1, \ldots, V_k\} \qquad & \text{//un nodo coloreado por particion}\\
+(2)\ x_{ij} + x_{i'j} \leq 1 \qquad & \forall \ (i,i') \in E, \ \forall \ j = 1, \ldots, n \qquad & \text{//nodos adyacentes no tienen el mismo color}\\
+k * w_j \geq \sum_{i=1}^{n} x_{ij} \qquad & \forall \ j \in \{1, \ldots, k\} \qquad & \text{//desigualdad color vs nodos con ese color}\\
+w_j \leq \sum_{i=1}^{n} x_{ij} \qquad & \forall \ j \in \{1, \ldots, k\} \qquad & \text{//idem}\\
 x_{ij} \in \{0,1\}\\
 w_j \in \{0,1\}\\
 \end{align*}
+
+\subsection{Modelo Santiago}
+
+Este modelo es igual a Modelo Pedro, salvo que la ``desigualdad color vs nodos con ese color'' se modela de la siguiente forma:
+
+\begin{align*}
+x_{ij} \leq w_j \ \forall \ v_i \in V, \ \forall \ j=1,\ldots,n
+\end{align*}
+
+%TODO
+La implementación de estos modelos se puede observar en la sección COMPLETAR. (Apendice o seccion del informe? Vale la pena poner codigo de esto en el informe?)
+
+\section{Branch and Bound}
+
+\emph{Branch and bound} (A partir de ahora BB) es un algoritmo que consiste en enumerar soluciones candidatas, interpretándolas como un árbol de soluciones. BB explora las ramas de este árbol pero antes de enumerar las soluciones candidatas de una rama, dicha rama es comparada con la mejor solución actual y es descartada en caso que no pueda superarla.
+
+Por suerte, una vez que tenemos el problema creado en cplex, pedirle que corra BB es una sola línea: llamar a CPXmipopt con el entorno y el lp.
+
+\section{Demostraciones}
+
+\textbf{Desigualdad 1:} Sea $j_0 \in {1, \ldots, n}$ y sea $K$ una clique maximal de $G$. La desigualdad clique está definida por:
+\begin{align*}
+\sum_{p \in K} x_{pj_0} \leq w_{j_0}
+\end{align*}
+
+\textbf{Demostración:}
+$w_{j_0} \in \{0,1\}$ por definición de los $w$.
+
+Recordamos que $x_{ij} \in \{0,1\}$ para todo $i, j$.
+
+$0 \leq \sum_{p \in K} x_{pj_0}$ ya que todos los x son mayores o iguales que $0$.
+
+Por un lado hay un nodo coloreado por partición y, en particular, hay a lo sumo uno con el color $j_0$ por partición por la inecuación (1) de la sección \ref{modelo-pedro}. Luego, si los nodos de la clique pertenecen a una misma partición, están obligados a que a lo sumo uno tenga el color $j_0$.
+
+Si los nodos de la clique pertenecen a distinta partición, son vecinos por estar en la clique también están restringidos a que a lo sumo uno de ellos tenga el color $j_0$, por la inecuación (2) de la sección \ref{modelo-pedro}.
+
+Luego, $\sum_{p \in K} x_{pj_0} \leq 1$ ya que a lo sumo hay un nodo con el color $j_0$ por clique.
+
+Luego, $0 \leq \sum_{p \in K} x_{pj_0} \leq 1$. Como las x toman solo valores enteros, $\sum_{p \in K} x_{pj_0} \in \{0,1\}$.
+
+Luego, el único caso donde puede fallar la desigualdad es que $\sum_{p \in K} x_{pj_0} = 1$ y $w_{j_0} = 0$. Vamos a ver por el absurdo que esto es imposible.
+
+Por definición de los $w$, $w_{j_0} = 0$ si ningún vértice tiene el color $j_0$. Como $\sum_{p \in K} x_{pj_0} = 1$, significa que $\exists$ un vértice en la clique $K$ con el color $j_0$. Por lo tanto, $w_{j_0} = 1$. ABS!
+
+Luego, vale la desigualdad 1.
+
+\hfill \ensuremath{\Box}
+
+\textbf{Desigualdad 2:} Sea $j_0 \in {1, \ldots, n}$ y $C_{2k+1} = v1, \ldots, v_{2k+1}$, $k \geq 2$, un agujero de longitud impar. La desigualdad odd-hole está definida por:
+\begin{align*}
+\sum_{p \in C_{2k+1}} x_{pj_0} \leq  k * w_{j_0}
+\end{align*}
+
+\textbf{Demostración:}
+
+Al colorear un nodo con el color $j_0$, puedo verlo como remover las dos aristas que lo comunican con los otros dos nodos vecinos del agujero impar. En este sentido, si uno de los nodos no tiene dos aristas, significa que uno de sus vecinos está coloreado con el color $j_0$.
+
+De esta forma, para colorear $k+1$ nodos con el color $j_0$ necesito $2 * (k+1)$ aristas. Sin embargo, el agujero impar tiene $2 * k$ aristas. Luego, no puedo colorear $k+1$ nodos con el color $j_0$.
+
+Luego, $\sum_{p \in C_{2k+1}} x_{pj_0} \leq k$.
+
+Por definición de los $w$, el $w_{j_0}$ puede ser 0 o 1.
+
+Si $w_{j_0} = 0$, esto implica que ningún x está coloreado con el color $j_0$.
+
+Luego, $\sum_{p \in C_{2k+1}} x_{pj_0} = 0 \leq 0 = k * w_{j_0}$.
+
+Si $w_{j_0} = 0$, como sabemos que $\sum_{p \in C_{2k+1}} x_{pj_0} \leq k$ vale que $\sum_{p \in C_{2k+1}} x_{pj_0} \leq k * 1 = k * w_{j_0}$.
+ 
+Luego, vale la desigualdad 2.
+
+\hfill \ensuremath{\Box}
+
+
+
+%\section{Desarrollo}
+
+%\subsection{Decisiones tomadas}
+
+%\subsection{Problemas encontrados}
+
+%\subsection{Conclusiones}
+
+
+\newpage
+
+\appendix
+
+\section{Código Relevante}
+
+En esta sección vamos a mostrar los fragmentos de código más importantes de nuestra implementación.
+
+\subsection{Variables Globales}
+
+Para facilitarnos el modelado, decidimos tener algunas variables globales:
+
+\begin{lstlisting}
+int N; // |Vertices|
+int E; // |Aristas|
+int P; // |Particiones|
+vector <vector <int> > M; // Matriz de adyacencia. M_v1_v2 = 1 si (v1,v2) in E; 0 sino.
+vector <vector <int> > S; // en S_p estan los vertices de la particion p.
+\end{lstlisting}
+
+\subsection{Ordenamiento de variables}
+
+Las variables las guardamos de la siguiente forma:
+\begin{center}
+$w_0, w_1, \ldots, w_{(P-1)}, x_{00}, \ldots, x_{0(P-1)}, x_{10}, \ldots, x_{1(P-1)}, \ldots, x_{(N-1)0},\ldots, x_{(N-1)(P-1)}$
+\end{center}
+
+Es decir, primero los $w$ que representan los colores. Luego ordenamos por variable, y dentro de cada variable ordenamos por color.
+
+Utilizamos la siguiente función para obtener el índice correcto, dado un nodo y un color:
+
+\begin{lstlisting}
+///Al principio me muevo en los indices del color por lo que lo muevo ese offset
+///Para ir al indice correcto, me voy hasta cantColoresPorVariable * indiceVariable
+///Luego, sumo el indice del color para moverme al color correcto dentro de la variable
+int xijIndice(int indiceVariable, int indiceColor){
+    return P + P * indiceVariable + indiceColor;
+}
+\end{lstlisting}
+
+
+\subsection{Agregar Variables}
+
+\begin{lstlisting}
+// Definimos las variables. En total, son P + N*P variables ( las W[j] y las X[i][j] )
+int cantVariables = P + N*P;
+double *ub, *lb, *objfun; // Cota superior, cota inferior, coeficiente de la funcion objetivo.
+char *xctype, **colnames; // tipo de la variable , string con el nombre de la variable.
+
+for (int i = 0; i < cantVariables; i++) {
+		ub[i] = 1.0; // seteo upper y lower bounds de cada variable
+		lb[i] = 0.0;
+		if(i < P) {  // agrego el costo en la funcion objetivo de cada variables
+				objfun[i] = 1;  // busco minimizar Sum(W_j) para j=0..P (la cantidad de colores utilizados).
+		} else {
+				objfun[i] = 0;  // los X[i][j] no contribuyen a la funcion objetivo
+		}
+		xctype[i] = 'B';  // Binaria para Branch and Bound
+		colnames[i] = new char[10];
+}
+
+for(int j=0; j<P; j++) {
+		sprintf(colnames[j], "W_%d", j);
+}
+for(int i=1; i<=N; i++) {
+		for(int j=0; j<P; j++) {
+				sprintf(colnames[i*P+j], "X_%d_%d", i-1, j);
+		}
+}
+
+if(algoritmo == "cb" ) {
+	// si quiero resolver la relajacion, agregar los cortes y despues resolver el MIP, no agrego xctype
+	CPXnewcols(env, lp, cantVariables, objfun, lb, ub, NULL, colnames);
+} else if (algoritmo == "bb") {
+	// si quiero hacer MIP, directamente, con branch and bound, agrego xctype
+	CPXnewcols(env, lp, cantVariables, objfun, lb, ub, xctype, colnames);
+}
+\end{lstlisting}
+
+\subsection{Agregar Restricciones}
+
+Para las restricciones usamos las siguientes variables:
+
+\begin{lstlisting}
+double *rhs; // Termino independiente de las restricciones.
+int *matbeg; //Posicion en la que comienza cada restriccion en matind y matval.
+int *matind; // Array con los indices de las variables con coeficientes != 0 en la desigualdad.
+double *matval; // Array que en la posicion i tiene coeficiente (!= 0) de la variable matind[i] en la restriccion.
+\end{lstlisting}
+
+Restricciones de un color por partición:
+
+\begin{lstlisting}
+// i) P restricciones - exactamente un color a cada vertice (una restriccion por cada particion)
+for(int particion = 0; particion < P; particion++) {
+	matbeg[cantRestricciones] = nzcnt;
+	rhs[cantRestricciones]    = 1;
+	sense[cantRestricciones]  = 'E';
+	for(int e = 0; e < S[particion].size(); e++) {
+		for(int color = 0; color < P; color++) {
+			matind[nzcnt] = xijIndice(S[particion][e], color);
+			matval[nzcnt] = 1;
+			nzcnt++;
+		}
+	}
+			cantRestricciones++;
+}
+\end{lstlisting}
+
+Restricciones de vecinos con distinto color:
+
+\begin{lstlisting}
+// ii) Cota superior de (E*P)/2 restricciones mas
+// Una para cada par de vecinos i j, para cada color pero solo cuando i < j, y estan en distinta particion
+for(int i = 0; i < N; i++) {
+	for(int j = i + 1; j < N; j++) { 
+		if(M[i][j] == 1 and dameParticion(i) != dameParticion(j)){
+			for(int color = 0; color < P; color++) {
+				matbeg[cantRestricciones] = nzcnt;
+				rhs[cantRestricciones]    = 1;
+				sense[cantRestricciones]  = 'L';
+
+				matind[nzcnt] = xijIndice(i,color);
+				matval[nzcnt] = 1;
+				nzcnt++;
+				matind[nzcnt] = xijIndice(j,color);
+				matval[nzcnt] = 1;
+				nzcnt++;
+				cantRestricciones++;
+			}
+		}
+	}
+}
+\end{lstlisting}
+
+Y acá es donde se diferencian los modelos: en cómo modelar la relación entre los nodos y sus colores asociados.
+
+\subsubsection{Modelo Pedro}
+\label{codigo-modelo-pedro}
+
+\begin{lstlisting}
+// iii) 2*P restricciones mas
+// - P * wj + sigma xij <= 0
+for(int k=0; k<P; k++) {  // para cada color
+		matbeg[cantRestricciones] = nzcnt;
+		rhs[cantRestricciones] = 0;
+		sense[cantRestricciones] = 'L';
+		matind[nzcnt] = k;
+		matval[nzcnt] = -1 * P;
+		nzcnt++;
+		for(int i=0; i<N; i++) {
+				matind[nzcnt] = xijIndice(i,k);
+				matval[nzcnt] = 1;
+				nzcnt++;
+		}
+		cantRestricciones++;
+}
+
+//  - wj + sigma xij >= 0
+for(int k=0; k<P; k++) {
+		matbeg[cantRestricciones] = nzcnt;
+		rhs[cantRestricciones] = 0;
+		sense[cantRestricciones] = 'G';
+		matind[nzcnt] = k;
+		matval[nzcnt] = -1;
+		nzcnt++;
+		for(int i=0; i<N; i++) {
+				matind[nzcnt] = xijIndice(i,k);
+				matval[nzcnt] = 1;
+				nzcnt++;
+		}
+		cantRestricciones++;
+}
+\end{lstlisting}
+
+\subsubsection{Modelo Santiago}
+\label{codigo-modelo-santiago}
+
+\begin{lstlisting}
+// iii) N*P restricciones mas
+// -wj + xij <= 0
+for(int color = 0; color < P; color++) { 
+		for(int i = 0; i < N; i++) {
+				matbeg[cantRestricciones] = nzcnt;
+				rhs[cantRestricciones] = 0;
+				sense[cantRestricciones] = 'L';
+				matind[nzcnt] = color;
+				matval[nzcnt] = -1;
+				nzcnt++;
+				matind[nzcnt] = xijIndice(i, color);
+				matval[nzcnt] = 1;
+				nzcnt++;
+				cantRestricciones++;
+		}
+}
+\end{lstlisting}
+
+
+
+
+
+
 
 
 \end{document}

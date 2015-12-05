@@ -54,7 +54,7 @@ vector <vector <int> > S; // en S_p estan los vertices de la particion p.
 /*
  *
     Las variables se guardan:
-    w0,w1,...,w(P-1),x00,x01,...,x0(P-1),x10,x11,...,x1(P-1),..,x(N-1)0,x(N-1)1,...,x(N-1)(P-1)
+    w0,w1,...,w(P-1),x00,x01,...,x0(P-1),x10,x11,...,x1(P-1),...,x(N-1)0,x(N-1)1,...,x(N-1)(P-1)
     Es decir, primero los w que representan los colores.
     Luego ordenamos por variable, y dentro de cada variable ordenamos por color.
 
@@ -539,61 +539,53 @@ int main(int argc, char **argv) {
 
     double *rhs = new double[rcnt]; // Termino independiente de las restricciones.
     int *matbeg = new int[rcnt];    //Posicion en la que comienza cada restriccion en matind y matval.
-    //cout << "hola" << endl;
     int *matind = new int[rcnt*cantVariables];       // Array con los indices de las variables con coeficientes != 0 en la desigualdad.
-    //cout << "chau" << endl;
     double *matval = new double[rcnt*cantVariables]; // Array que en la posicion i tiene coeficiente ( != 0) de la variable matind[i] en la restriccion.
 
     // CPLEX va a leer hasta la cantidad nzcnt que le pasemos.
     int cantRestricciones = 0;  // r = numero de restriccion
 
     // i) P restricciones - exactamente un color a cada vertice (una restriccion por cada particion)
-    for(int p = 0; p < P; p++) {
+    for(int particion = 0; particion < P; particion++) {
         matbeg[cantRestricciones] = nzcnt;
-        rhs[cantRestricciones]    = 1  ;
+        rhs[cantRestricciones]    = 1;
         sense[cantRestricciones]  = 'E';
-        for(int i=0; i<N; i++) {  // para cada conjunto dentro de la particion, 'e' es el indice de un elemento en el cjto
-            for(int e=0; e < S[p].size() && S[p][e] == i; e++) {  // si el nodo i esta en el conjunto S[p] de la particion,
-                for(int j=0; j<P; j++) {
-                    matind[nzcnt] = xijIndice(i, j);
-                    matval[nzcnt] = 1;
-                    nzcnt++;
-                }
-            }
-        }
+		for(int e = 0; e < S[particion].size(); e++) {
+			for(int color = 0; color < P; color++) {
+				matind[nzcnt] = xijIndice(S[particion][e], color);
+				matval[nzcnt] = 1;
+				nzcnt++;
+			}
+		}
         cantRestricciones++;
     }
 
-    // ii) (E*P)/2 restricciones mas (para cada eje, para cada color pero solo cuando i < j)
-    int cuenta = 0;
-    for(int k=0; k<P; k++) {  // para cada color k
-        for(int i=0; i<N; i++) {
-            for(int j=i+1; j<N; j++) {  // para cada par de nodos
-                if(M[i][j] == 1 and dameParticion(i) != dameParticion(j)) {     // si estan unidos por un eje
-                    matbeg[cantRestricciones] = nzcnt;
-                    rhs[cantRestricciones]    = 1;
-                    sense[cantRestricciones]  = 'L';
+	// ii) Cota superior de (E*P)/2 restricciones mas
+	// Una para cada par de vecinos i j, para cada color pero solo cuando i < j, y estan en distinta particion
+	for(int i = 0; i < N; i++) {
+		for(int j = i + 1; j < N; j++) { 
+			if(M[i][j] == 1 and dameParticion(i) != dameParticion(j)){
+				for(int color = 0; color < P; color++) {
+					matbeg[cantRestricciones] = nzcnt;
+					rhs[cantRestricciones]    = 1;
+					sense[cantRestricciones]  = 'L';
 
-                    matind[nzcnt] = xijIndice(i,k);
-                    matval[nzcnt] = 1;
-                    nzcnt++;
-                    matind[nzcnt] = xijIndice(j,k);
-                    matval[nzcnt] = 1;
-                    nzcnt++;
-                    cantRestricciones++;
-                    cuenta++;
-                }
-            }
-        }
+					matind[nzcnt] = xijIndice(i,color);
+					matval[nzcnt] = 1;
+					nzcnt++;
+					matind[nzcnt] = xijIndice(j,color);
+					matval[nzcnt] = 1;
+					nzcnt++;
+					cantRestricciones++;
+				}
+			}
+		}
     }
 
-    // P + i*P + k
-    // k son la cantidad de colores
-    // P + i*P me salteo al casillero de la matriz
     if(numeroDeModelo == 0){
 
         // iii) 2*P restricciones mas
-        // r = numero actual de restriccion
+		// - P * wj + sigma xij <= 0
         for(int k=0; k<P; k++) {  // para cada color
             matbeg[cantRestricciones] = nzcnt;
             rhs[cantRestricciones] = 0;
@@ -609,6 +601,7 @@ int main(int argc, char **argv) {
             cantRestricciones++;
         }
 
+		//  - wj + sigma xij >= 0
         for(int k=0; k<P; k++) {
             matbeg[cantRestricciones] = nzcnt;
             rhs[cantRestricciones] = 0;
@@ -626,22 +619,22 @@ int main(int argc, char **argv) {
 
     }
     else{
+		// iii) N*P restricciones mas
+		// -wj + xij <= 0
         for(int color = 0; color < P; color++) { 
             for(int i = 0; i < N; i++) {
                 matbeg[cantRestricciones] = nzcnt;
                 rhs[cantRestricciones] = 0;
                 sense[cantRestricciones] = 'L';
-                /// -wj + xij
                 matind[nzcnt] = color;
                 matval[nzcnt] = -1;
                 nzcnt++;
                 matind[nzcnt] = xijIndice(i, color);
                 matval[nzcnt] = 1;
-                nzcnt++; ///xij
+                nzcnt++;
                 cantRestricciones++;
             }
         }
-
     }
 
     //Actualizo rcnt.
