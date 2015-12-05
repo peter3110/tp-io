@@ -411,9 +411,20 @@ void agregarRestriccionAgujero(CPXENVptr env, CPXLPptr lp, std::vector<int> indi
 
 void impresionModelo(CPXENVptr env, CPXLPptr lp){
 
-    string nombreArchivoSalida = "salida.out";
+    stringstream ssNombreArchivoSalida;
+    ssNombreArchivoSalida << "salidas/"
+                          << archivoInput << "_"
+                          << randomness << "_"
+                          << porcentajeParticiones << "_"
+                          << algoritmo << "_"
+                          << epsilonClique << "_"
+                          << epsilonAgujero << "_"
+                          << numeroDeModelo << "_"
+                          << RECORRIDO_ARBOL << "_"
+                          << VARIABLE_CORTE;
+
     ofstream fout;
-    fout.open(nombreArchivoSalida.c_str());
+    fout.open(ssNombreArchivoSalida.str().c_str());
 
     double objval;
     CPXgetobjval(env, lp, &objval);
@@ -865,7 +876,7 @@ int main(int argc, char **argv) {
             delete [] sol;
         }
         
-        CPXwriteprob (env, lp, "lpCB.lp", "LP");
+        // CPXwriteprob (env, lp, "lpCB.lp", "LP");
 
         ///Cuando salimos, pasamos a binaria y corremos un branch and bound
         char *ctype = new char[cantVariables];
