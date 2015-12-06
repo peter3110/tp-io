@@ -194,27 +194,35 @@ En este trabajo práctico desarrollamos dos modelos distintos (Modelo Pedro y Mo
 
 \subsection{Modelo Pedro}
 
-\textit{Aclaracion:} (1) y (2) no son escalares sino que van a ser usados para referenciar a las inecuaciones en las demostraciones.
+\textit{Aclaracion:} (1) y (2) no son escalares sino que van a ser usados para referenciar a las inecuaciones.
 
 \label{modelo-pedro}
 
 $Min \sum_{j=1}^{n} w_j$ sujeto a:
 \begin{align*}
-(1)\ \sum_{v_i \in V_p}\sum_{j=1}^{n} x_{ij} = 1 \qquad & \forall \ V_p \in \{V_1, \ldots, V_k\} \qquad & \text{//un nodo coloreado por particion}\\
-(2)\ x_{ij} + x_{i'j} \leq 1 \qquad & \forall \ (i,i') \in E, \ \forall \ j = 1, \ldots, n \qquad & \text{//nodos adyacentes no tienen el mismo color}\\
-k * w_j \geq \sum_{i=1}^{n} x_{ij} \qquad & \forall \ j \in \{1, \ldots, k\} \qquad & \text{//desigualdad color vs nodos con ese color}\\
-w_j \leq \sum_{i=1}^{n} x_{ij} \qquad & \forall \ j \in \{1, \ldots, k\} \qquad & \text{//idem}\\
+(1)\ \sum_{v_i \in V_p}\sum_{j=1}^{n} x_{ij} = 1 \qquad & \forall \ V_p \in \{V_1, \ldots, V_k\}\\
+(2)\ x_{ij} + x_{i'j} \leq 1 \qquad & \forall \ (i,i') \in E, \ \forall \ j = 1, \ldots, n, \ x_i \ \text{y} \ x_{i'} \text{en distinta partición}\\
+k * w_j \geq \sum_{i=1}^{n} x_{ij} \qquad & \forall \ j \in \{1, \ldots, k\}\\
+w_j \leq \sum_{i=1}^{n} x_{ij} \qquad & \forall \ j \in \{1, \ldots, k\}\\
 x_{ij} \in \{0,1\}\\
 w_j \in \{0,1\}\\
 \end{align*}
 
+(1) es la restricción que establece que haya un único nodo coloreado por partición.
+
+(2) indica que los nodos adyacentes de distintas particiones no tienen el mismo color. No hace falta forzar esto para la misma partición ya que (1) se encarga de eso.
+
+Las siguientes dos restricciones se encargan de mantener el balance entre los colores y los nodos con ese color.
+
 \subsection{Modelo Santiago}
 
-Este modelo es igual a Modelo Pedro, salvo que la ``desigualdad color vs nodos con ese color'' se modela de la siguiente forma:
+Este modelo es igual a Modelo Pedro, salvo que las desigualdades de color vs nodos con ese color se modelan con una sola restricción de la siguiente forma:
 
 \begin{align*}
 x_{ij} \leq w_j \ \forall \ v_i \in V, \ \forall \ j=1,\ldots,n
 \end{align*}
+
+Este último modelo tiene más restricciones que el anterior, dado un mismo grafo. En Modelo Pedro, las últimas restriccioens son $2 * P$ (donde P es la cantidad de particiones), mientras que en Modelo Santiago son $N * P$. Tener más restricciones puede llevar a que el tiempo de cómputo sea mayor. La comparación de estos modelos está en la sección \ref{comparacion-modelos}
 
 %TODO
 La implementación de estos modelos se puede observar en la sección COMPLETAR. (Apendice o seccion del informe? Vale la pena poner codigo de esto en el informe?)
@@ -282,9 +290,10 @@ Luego, vale la desigualdad 2.
 
 
 
-%\section{Desarrollo}
+\section{Desarrollo}
 
-%\subsection{Decisiones tomadas}
+\subsection{Comparación Modelos}
+\label{comparacion-modelos}
 
 %\subsection{Problemas encontrados}
 
