@@ -426,7 +426,9 @@ void impresionModelo(CPXENVptr env, CPXLPptr lp){
                           << epsilonAgujero << "_"
                           << numeroDeModelo << "_"
                           << RECORRIDO_ARBOL << "_"
-                          << VARIABLE_CORTE;
+                          << VARIABLE_CORTE << "_"
+                          << semilla
+                          << ".txt";
 
     ofstream fout;
     fout.open(ssNombreArchivoSalida.str().c_str());
@@ -434,7 +436,7 @@ void impresionModelo(CPXENVptr env, CPXLPptr lp){
     double objval;
     CPXgetobjval(env, lp, &objval);
 
-    fout << "[Datos del problema]" << endl;
+    fout << "[Input]" << endl;
     fout << "archivoInput=" << archivoInput << endl;
     fout << "randomness=" << randomness << endl;
     fout << "porcentajeParticiones=" << porcentajeParticiones << endl;
@@ -444,16 +446,16 @@ void impresionModelo(CPXENVptr env, CPXLPptr lp){
     fout << "numeroDeModelo=" << numeroDeModelo << endl;
     fout << "RECORRIDO_ARBOL=" << RECORRIDO_ARBOL << endl;
     fout << "VARIABLE_CORTE=" << VARIABLE_CORTE << endl;
+    fout << "Semilla usada=" << semilla << endl;
     fout << endl;
 
-    fout << "[Datos extra]" << endl;
+    fout << "[Datos del problema]" << endl;
     fout << "Cant Nodos=" << N << endl;
     fout << "Cant Aristas=" << E/2 << endl;
     ///Maximo numero de aristas es n * (n-1) / 2
     ///Tengo E/2 aristas (ya que vienen repetidas)
     fout << "Porcentaje de aristas=" << double(E) / double(N * (N-1)) << endl;
     fout << "Cantidad Particiones=" << P << endl;
-    fout << "Semilla usada=" << semilla << endl;
     fout << endl;
 
     fout << "[Resultados]" << endl;
@@ -465,18 +467,8 @@ void impresionModelo(CPXENVptr env, CPXLPptr lp){
     fout << "Cortes Clique=" << cantidadCortesClique << endl;
     fout << "Cortes Agujero=" << cantidadCortesAgujero << endl;
 
-
     fout.close();
 }
-
-/*
-tiempoPreparar
-tiempoCutAndBranch
-tiempoBranchAndBound
-
-
-}
-*/
 
 // ================================================================================
 
@@ -485,7 +477,7 @@ int main(int argc, char **argv) {
     char ejes[100];
     char labels[100];
     char test[100];
-    
+
     archivoInput          = argv[1];
     randomness            = argv[2];
     porcentajeParticiones = atof(argv[3]);
