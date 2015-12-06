@@ -21,6 +21,7 @@ ILOSTLBEGIN
  * vii) numeroDeModelo --> 0 = Pedro, 1 = Santiago
  * viii) RECORRIDO_ARBOL = 0, 1
  * ix) VARIABLE CORTE = -1, 0, 1
+ * x) semilla (para usar en random)
 */
 
 /* Defino las constantes del problema */
@@ -39,6 +40,10 @@ int VARIABLE_CORTE;
 int numeroDeModelo;
 string archivoInput;
 string randomness;
+
+unsigned int semilla;
+int cantidadCortesClique = 0;
+int cantidadCortesAgujero = 0;
 
 // Tomamos el tiempo de resolucion utilizando CPXgettime.
 double inittime, endtime;
@@ -447,6 +452,8 @@ void impresionModelo(CPXENVptr env, CPXLPptr lp){
     ///Maximo numero de aristas es n * (n-1) / 2
     ///Tengo E/2 aristas (ya que vienen repetidas)
     fout << "Porcentaje de aristas=" << double(E) / double(N * (N-1)) << endl;
+    fout << "Cantidad Particiones=" << P << endl;
+    fout << "Semilla usada=" << semilla << endl;
     fout << endl;
 
     fout << "[Resultados]" << endl;
@@ -455,6 +462,8 @@ void impresionModelo(CPXENVptr env, CPXLPptr lp){
     fout << "Tiempo en CB=" << tiempoCutAndBranch << endl; 
     fout << "Tiempo en BB=" << tiempoBranchAndBound << endl; 
     fout << "Tiempo Total=" << tiempoPreparar + tiempoCutAndBranch + tiempoBranchAndBound << endl; 
+    fout << "Cortes Clique=" << cantidadCortesClique << endl;
+    fout << "Cortes Agujero=" << cantidadCortesAgujero << endl;
 
 
     fout.close();
@@ -471,14 +480,12 @@ tiempoBranchAndBound
 
 // ================================================================================
 
-int main(int argc, char **argv) {
-    
-    ///Comenzamos la semilla para los random
-    srand(time(0));
+int main(int argc, char **argv) { 
 
     char ejes[100];
     char labels[100];
     char test[100];
+    
     archivoInput          = argv[1];
     randomness            = argv[2];
     porcentajeParticiones = atof(argv[3]);
@@ -488,6 +495,9 @@ int main(int argc, char **argv) {
     numeroDeModelo        = atoi(argv[7]);
     RECORRIDO_ARBOL       = atoi(argv[8]);
     VARIABLE_CORTE        = atoi(argv[9]);
+    semilla               = atoi(argv[10]);
+
+    srand(semilla);
 
     if(not freopen(archivoInput.c_str(), "r", stdin)){
         cout << "No pude abrir archivo: " << archivoInput << endl;
@@ -844,6 +854,7 @@ int main(int argc, char **argv) {
                     if (not incluido and not clique.empty()) {
                         agregados.push_back(clique);
                         agregarRestriccionClique(env, lp, clique);
+                        cantidadCortesClique++;
                         cout << "AGREGO RESTRICCION DE CLIQUE de random " << iteracionRandom << " y de color #"<< color << ": ";
                         for(int j=0; j<clique.size(); j++) {
                             cout << clique[j] << " ";
@@ -863,6 +874,7 @@ int main(int argc, char **argv) {
                     if (not incluido and not agujero.empty()) {
                         agregados.push_back(agujero);
                         agregarRestriccionAgujero(env, lp, agujero);
+                        cantidadCortesAgujero++;
                         cout << "AGREGO RESTRICCION DE AGUJERO de color #"<< color << ": ";
                         for(int j=0; j<agujero.size(); j++) {
                             cout << agujero[j] << " ";
