@@ -36,6 +36,15 @@ double epsilonClique;
 double epsilonAgujero;
 int RECORRIDO_ARBOL;
 int VARIABLE_CORTE;
+int numeroDeModelo;
+string archivoInput;
+string randomness;
+
+// Tomamos el tiempo de resolucion utilizando CPXgettime.
+double inittime, endtime;
+double tiempoPreparar = 0.0;
+double tiempoCutAndBranch = 0.0;
+double tiempoBranchAndBound = 0.0;
 
 vector <vector <int> > M; // M_v1_v2 = 1 si (v1,v2) in E; 0 sino.
 vector <vector <int> > S; // en S_p estan los vertices de la particion p.
@@ -67,7 +76,6 @@ vector <vector <int> > S; // en S_p estan los vertices de la particion p.
 int xijIndice(int indiceVariable, int indiceColor){
     return P + P * indiceVariable + indiceColor;
 }
-
 
 void mostrameValores(CPXENVptr env, CPXLPptr lp){
     
@@ -121,13 +129,14 @@ bool ordenamientoPeso(const pair<int,double> &A, const pair<int,double> &B) {
 
 ////
 vector<int> dameClique(double *sol, int color, bool random) {
+
     vector<int> clique;
     vector< pair< int, double > > vecinosPotenciales;
     int indicePrimerNodo = 0;
-    double pesoAcumulado;
     if(random) {
         indicePrimerNodo = rand() % N;
-    }else {
+    }
+    else {
         double pesoMax = 0;
         for(int nodo=0; nodo<N; nodo++) {
             if (sol[xijIndice(nodo,color)] > pesoMax) {
@@ -136,10 +145,11 @@ vector<int> dameClique(double *sol, int color, bool random) {
             }
         }
         //cout << pesoMax << endl;
-        if (pesoMax == 0) {return clique; }
-
-        pesoAcumulado = pesoMax;
+        if (pesoMax < TOL) {return clique;}
     }
+
+    double pesoAcumulado = sol[xijIndice(indicePrimerNodo,color)];
+
     for(int vecino=0; vecino < N; vecino++) {
         if(M[vecino][indicePrimerNodo] == 1){
             vecinosPotenciales.push_back(make_pair(vecino, sol[xijIndice(vecino,color)]));
@@ -163,9 +173,12 @@ vector<int> dameClique(double *sol, int color, bool random) {
             }
         }
     }
+
     if (pesoAcumulado > 1.0 + epsilonClique and clique.size() > 2) {
+        cout << pesoAcumulado << " ";
         return clique;
-    } else {
+    }
+    else {
         return vector<int>(); 
     }
 }
@@ -223,15 +236,23 @@ void read(string randomness) {  // debo dividir a los vertices en 'porcentajePar
     // me salteo las 3 primeras filas (asumo que todas las instancias vienen de esta forma)
     string line; char c;
     // (segun el formato de los casos de prueba) - salteo las 'c', la 'p' y el 'edge'
-    while(cin>>line) { if (line == "p") break; }
+    while(cin>>line) {
+        if (line == "p"){
+            break;
+        }
+    }
     cin >> line;
     
     cin >> N >> E;
 
-    if(randomness == "random") {  // random -> me pasaron por parametro cuantas particiones se 
-        P = porcentajeParticiones * N;    //       aceptan como maximo
-    }
-    if(randomness == "notrandom") { P = N; }  // notrandom -> una particion por nodo
+    // random -> me pasaron por parametro cuantas particiones se aceptan como maximo
+    // notrandom -> una particion por nodo
+    if(randomness == "random") {  
+        P = porcentajeParticiones * N;
+    }    
+    else if(randomness == "notrandom") {
+        P = N;
+    }  
     
     // Asignacion de particiones (puede ser al azar o una particion para cada nodo)
     if(randomness == "random") {
@@ -241,30 +262,37 @@ void read(string randomness) {  // debo dividir a los vertices en 'porcentajePar
             S[vp].push_back(v);
         }
         // tengo que eliminar los slots de S que quedan vacios, y decrementar P de forma acorde
-        int count =0;
+        int count = 0;
         vector< vector<int> >::iterator it = S.begin();
         while( it != S.end() ) {
             if(it->empty()) {
                 it = S.erase(it);
                 count++;
-            } else { it++; }
+            }
+            else {
+                it++;
+            }
         }
         P = P - count;
     
-    } else if (randomness == "notrandom") {
+    }
+    else if (randomness == "notrandom") {
         S.resize(N);
         for(int v=0; v<N; v++) {
             S[v].push_back(v);
-            //cout << v << " " << vp << endl;
         }
-    } else {
+    }
+    else {
         cout << "ERROR: parametros mal ingresados!" << endl;
     }
+
     cout << "Cantidad final de particiones: " << P << endl;
 
     M.resize(N);
-    for(int i=0; i<N; i++) { M[i].resize(N); } // M in NxN.
-    // v_i = 1...N ----> v_i = 0...N-1
+    for(int i=0; i<N; i++) {
+        M[i].resize(N);
+    } // M in NxN. v_i = 1...N ----> v_i = 0...N-1
+
     int v1, v2;
     for(int e=0; e<E; e++) {  // para cada eje, guardo los nodos de sus extremos.
         cin >> c >> v1 >> v2; // (formato) - leo el caracter extra que hay adelante
@@ -280,7 +308,7 @@ int dameParticion(int vertice){
             return i;
         }
     }
-    ///en caso de error
+    ///en caso que el nodo no exista
     return -1;
 }
 
@@ -380,28 +408,91 @@ void agregarRestriccionAgujero(CPXENVptr env, CPXLPptr lp, std::vector<int> indi
     }
 }
 
+
+void impresionModelo(CPXENVptr env, CPXLPptr lp){
+
+    stringstream ssNombreArchivoSalida;
+    ssNombreArchivoSalida << "salidas/"
+                          << archivoInput << "_"
+                          << randomness << "_"
+                          << porcentajeParticiones << "_"
+                          << algoritmo << "_"
+                          << epsilonClique << "_"
+                          << epsilonAgujero << "_"
+                          << numeroDeModelo << "_"
+                          << RECORRIDO_ARBOL << "_"
+                          << VARIABLE_CORTE;
+
+    ofstream fout;
+    fout.open(ssNombreArchivoSalida.str().c_str());
+
+    double objval;
+    CPXgetobjval(env, lp, &objval);
+
+    fout << "[Datos del problema]" << endl;
+    fout << "archivoInput=" << archivoInput << endl;
+    fout << "randomness=" << randomness << endl;
+    fout << "porcentajeParticiones=" << porcentajeParticiones << endl;
+    fout << "algoritmo=" << algoritmo << endl;
+    fout << "epsilonClique=" << epsilonClique << endl;
+    fout << "epsilonAgujero=" << epsilonAgujero << endl;
+    fout << "numeroDeModelo=" << numeroDeModelo << endl;
+    fout << "RECORRIDO_ARBOL=" << RECORRIDO_ARBOL << endl;
+    fout << "VARIABLE_CORTE=" << VARIABLE_CORTE << endl;
+    fout << endl;
+
+    fout << "[Datos extra]" << endl;
+    fout << "Cant Nodos=" << N << endl;
+    fout << "Cant Aristas=" << E/2 << endl;
+    ///Maximo numero de aristas es n * (n-1) / 2
+    ///Tengo E/2 aristas (ya que vienen repetidas)
+    fout << "Porcentaje de aristas=" << double(E) / double(N * (N-1)) << endl;
+    fout << endl;
+
+    fout << "[Resultados]" << endl;
+    fout << "Funcion objetivo=" << objval << endl;
+    fout << "Tiempo en preparar=" << tiempoPreparar << endl; 
+    fout << "Tiempo en CB=" << tiempoCutAndBranch << endl; 
+    fout << "Tiempo en BB=" << tiempoBranchAndBound << endl; 
+    fout << "Tiempo Total=" << tiempoPreparar + tiempoCutAndBranch + tiempoBranchAndBound << endl; 
+
+
+    fout.close();
+}
+
+/*
+tiempoPreparar
+tiempoCutAndBranch
+tiempoBranchAndBound
+
+
+}
+*/
+
 // ================================================================================
 
 int main(int argc, char **argv) {
-    srand(0);
-
-    if(not freopen(argv[1], "r", stdin)) {
-        return 1;
-    }
-
-    // freopen("output.out", "w", stdout);
+    
+    ///Comenzamos la semilla para los random
+    srand(time(0));
 
     char ejes[100];
     char labels[100];
     char test[100];
-    string randomness     = argv[2];
+    archivoInput          = argv[1];
+    randomness            = argv[2];
     porcentajeParticiones = atof(argv[3]);
     algoritmo             = argv[4];
-    epsilonClique  = atof(argv[5]);
-    epsilonAgujero = atof(argv[6]);
-    int numeroDeModelo    = atoi(argv[7]);
-    RECORRIDO_ARBOL = atoi(argv[8]);
-    VARIABLE_CORTE = atoi(argv[9]);
+    epsilonClique         = atof(argv[5]);
+    epsilonAgujero        = atof(argv[6]);
+    numeroDeModelo        = atoi(argv[7]);
+    RECORRIDO_ARBOL       = atoi(argv[8]);
+    VARIABLE_CORTE        = atoi(argv[9]);
+
+    if(not freopen(archivoInput.c_str(), "r", stdin)){
+        cout << "No pude abrir archivo: " << archivoInput << endl;
+        return 1;
+    }
 
     sprintf(ejes, "ejes.out");
     sprintf(labels, "labels.out");
@@ -410,7 +501,8 @@ int main(int argc, char **argv) {
     }
     else if (randomness == "random") {
         sprintf(test, "%s%s", argv[1], argv[3]);
-    }else {
+    }
+    else{
         cout << "Paramtros mal introducidos" << endl;
         return 0;
     }
@@ -435,6 +527,9 @@ int main(int argc, char **argv) {
         cerr << "Error creando el entorno" << endl;
         exit(1);
     }
+
+    ///Iniciio el reloj
+    CPXgettime(env, &inittime);
         
     // Creo el LP.
     lp = CPXcreateprob(env, &status, "instancia coloreo de grafo particionado");
@@ -459,7 +554,8 @@ int main(int argc, char **argv) {
         lb[i] = 0.0;
         if(i < P) {  // agrego el costo en la funcion objetivo de cada variables
             objfun[i] = 1;  // busco minimizar Sum(W_j) para j=0..P (la cantidad de colores utilizados).
-        } else {
+        }
+        else {
             objfun[i] = 0;  // los X[i][j] no contribuyen a la funcion objetivo
         }
         xctype[i] = 'B';  // 'C' es continua, 'B' binaria, 'I' Entera.
@@ -472,24 +568,26 @@ int main(int argc, char **argv) {
     */
     for(int j=0; j<P; j++) {
         sprintf(colnames[j], "W_%d", j);
-        //cout << colnames[j] << endl;
+        // cout << colnames[j] << endl;
     }
-    for(int i=1; i<=N; i++) {
+    for(int i=0; i<N; i++) {
         for(int j=0; j<P; j++) {
-            sprintf(colnames[i*P+j], "X_%d_%d", i-1, j);
-            //cout << colnames[i*P+j] << endl;
+            sprintf(colnames[xijIndice(i,j)], "X_%d_%d", i, j);
+            // cout << colnames[xijIndice(i,j)] << endl;
         }
     }
 
 
     // ========================== Agrego las columnas. =========================== //
-    if(algoritmo == "cb" ) {
+    if(algoritmo == "cb"){
         // si quiero resolver la relajacion, agregar los cortes y despues resolver el MIP, no agrego xctype
         status = CPXnewcols(env, lp, cantVariables, objfun, lb, ub, NULL, colnames);
-    } else if (algoritmo == "bb") {
+    }
+    else if (algoritmo == "bb"){
         // si quiero hacer MIP, directamente, con brancha and bound, agrego xctype
         status = CPXnewcols(env, lp, cantVariables, objfun, lb, ub, xctype, colnames);
-    } else {
+    }
+    else {
         cout << "Error: parametro de algoritmo bb/cb mal introducido" << endl;
         return 0;
     }
@@ -678,17 +776,13 @@ int main(int argc, char **argv) {
     }
  
     // Escribimos el problema a un archivo .lp.
-    status = CPXwriteprob(env, lp, "test.lp", NULL);
+    // status = CPXwriteprob(env, lp, "test.lp", NULL);
 
     if (status) {
         cerr << "Problema escribiendo modelo" << endl;
         exit(1);
     }
         
-    // Tomamos el tiempo de resolucion utilizando CPXgettime.
-    double inittime, endtime;
-    status = CPXgettime(env, &inittime);
-
     // Seteamos algunos parametros para resolver con branch and bound
     CPXsetintparam(env, CPX_PARAM_MIPSEARCH, CPX_MIPSEARCH_TRADITIONAL);
 
@@ -712,9 +806,9 @@ int main(int argc, char **argv) {
     // Seleccion de variable
     CPXsetintparam(env, CPX_PARAM_VARSEL, VARIABLE_CORTE); 
 
-
-
-
+    CPXgettime(env, &endtime);
+    tiempoPreparar = endtime - inittime;
+    inittime = endtime;
 
     // =========================================================================================================
     // resuelvo con cut and branch (con los cortes definidos por nosotros) o con branch and bound (y sin cortes)
@@ -732,24 +826,10 @@ int main(int argc, char **argv) {
             status = CPXgetobjval(env, lp, &objval);
             // Aca, deberia agregar los cortes requeridos, en funcion de "cliques" y "objval"
 
-            mostrameValores(env, lp);
+            // mostrameValores(env, lp);
 
             double *sol = new double[cantVariables];
             CPXgetx(env, lp, sol, 0, cantVariables - 1);
-            /*
-                    for(int v=0; v<N; v++){
-                        estaColoreado = false;
-                        for(int j=0; j<P; j++){
-                            if (sol[P + P*v + j] > 0) {
-                                cout << v+1 << " " << j+1 << " " << sol[xijIndice(v,j)] << endl;
-                                estaColoreado = true;
-                            }
-                        }
-                        if(not estaColoreado) {
-                            cout << v+1 << " " << 0 << endl;
-                        }
-                    }
-            */
 
             //CPXwriteprob (env, lp, "antesDeClique.lp", "LP");
             // BUSCAR Y AGREGAR CLIQUE
@@ -761,7 +841,7 @@ int main(int argc, char **argv) {
                     sort(clique.begin(), clique.end());
                     bool incluido = find(agregados.begin(), agregados.end(), clique) != agregados.end();
 
-                    if (not incluido and (not clique.empty())) {
+                    if (not incluido and not clique.empty()) {
                         agregados.push_back(clique);
                         agregarRestriccionClique(env, lp, clique);
                         cout << "AGREGO RESTRICCION DE CLIQUE de random " << iteracionRandom << " y de color #"<< color << ": ";
@@ -796,6 +876,7 @@ int main(int argc, char **argv) {
             delete [] sol;
         }
         
+        // CPXwriteprob (env, lp, "lpCB.lp", "LP");
 
         ///Cuando salimos, pasamos a binaria y corremos un branch and bound
         char *ctype = new char[cantVariables];
@@ -803,23 +884,26 @@ int main(int argc, char **argv) {
             ctype[i] = 'B';
         }
 
-        cout << "Antes cambiar tipo" << endl;
+        // cout << "Antes cambiar tipo" << endl;
         status = CPXcopyctype (env, lp, ctype);
-        cout << "Despues cambiar tipo" << endl;
+        // cout << "Despues cambiar tipo" << endl;
         delete[] ctype;
 
-        cout << "ANTES" << endl;
-        //CPXwriteprob (env, lp, "antesDeMip.lp", "LP");
-        status = CPXmipopt(env,lp);
-        cout << "DESPUES" << endl;
+        CPXgettime(env, &endtime);
+        tiempoCutAndBranch = endtime - inittime;
+        inittime = endtime;
+    }
 
-    }
-    else if (algoritmo == "bb") {
-        status = CPXmipopt(env,lp);
-    }
-    else {
-        return 0;
-    }
+    ///Corremos el BB, ya sea porque esto es lo que queriamos originalemente, o porque terminamos con los planos de corte
+
+    // cout << "ANTES" << endl;
+    //CPXwriteprob (env, lp, "antesDeMip.lp", "LP");
+    CPXmipopt(env,lp);
+    // cout << "DESPUES" << endl;
+
+    CPXgettime(env, &endtime);
+    tiempoBranchAndBound = endtime - inittime;
+    // inittime = endtime;
     
     status = CPXgettime(env, &endtime);
 
@@ -849,11 +933,11 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
-        cout << "Datos de la resolucion: " << "\t" << objval << "\t" << (endtime - inittime) << endl; 
+        cout << "Datos de la resolucion: " << "\t" << objval << "\t" << tiempoPreparar + tiempoCutAndBranch + tiempoBranchAndBound << endl; 
 
-        
-        //std::string outputfile = "dieta.sol";
-        //ofstream solfile(outputfile.c_str());
+        cout << "Tiempo en preparar: " << "\t" << tiempoPreparar << endl; 
+        cout << "Tiempo en CB: " << "\t" << tiempoCutAndBranch << endl; 
+        cout << "Tiempo en BB: " << "\t" << tiempoBranchAndBound << endl; 
 
         // Tomamos los valores de todas las variables. Estan numeradas de 0 a n-1.
         double *sol = new double[cantVariables];
@@ -864,55 +948,57 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
+        impresionModelo(env, lp);
+
             
         // Solo escribimos las variables distintas de cero (tolerancia, 1E-05).
         //solfile << "Status de la solucion: " << statstr << endl;
-        for(int j=0; j<P; j++) {
-            if(sol[j] > TOL) {
-                //cout << "W_" << j << " = " << sol[j] << endl;
-            }
-        }
-        for(int i=0; i<N; i++) {
-            for(int j=0; j<P; j++) {
-                if(sol[P + P*i + j] > TOL) {
-                    //cout << "X_" << i << "_" << j << " = " << sol[P+P*i+j] << endl;
-                }
-            }
-        }
+        // for(int j=0; j<P; j++) {
+        //     if(sol[j] > TOL) {
+        //         cout << "W_" << j << " = " << sol[j] << endl;
+        //     }
+        // }
+        // for(int i=0; i<N; i++) {
+        //     for(int j=0; j<P; j++) {
+        //         if(sol[P + P*i + j] > TOL) {
+        //             cout << "X_" << i << "_" << j << " = " << sol[P+P*i+j] << endl;
+        //         }
+        //     }
+        // }
         
         //solfile.close();
 
         // ==================== Devuelvo el grafo resultante coloreado, para graficar! ====================== //
-        ofstream streamEjes, streamLabels;
+        // ofstream streamEjes, streamLabels;
         //ofstream streamParticiones;
         // Tomamos los valores de la solucion y los escribimos a un archivo.
-        streamEjes.open(ejes);
-        for(int v1=0; v1<N; v1++) {
-            for(int v2=v1+1; v2<N; v2++) {
-                if (M[v1][v2] == 1) { 
-                    streamEjes << v1+1 << " " << v2+1 << endl;
-                }
-            }
-        } streamEjes.close();
-        cout << ejes << endl;
+        // streamEjes.open(ejes);
+        // for(int v1=0; v1<N; v1++) {
+        //     for(int v2=v1+1; v2<N; v2++) {
+        //         if (M[v1][v2] == 1) { 
+        //             streamEjes << v1+1 << " " << v2+1 << endl;
+        //         }
+        //     }
+        // } streamEjes.close();
+        // cout << ejes << endl;
         
-        streamLabels.open(labels);
-        bool estaColoreado;
-        for(int v=0; v<N; v++){
-            estaColoreado = false;
-            for(int j=0; j<P; j++){
-                if (sol[P + P*v + j] == 1) {
-                    streamLabels << v+1 << " " << j+1 << endl;
-                    estaColoreado = true;
-                }
-            }
-            if(not estaColoreado) {
-                streamLabels << v+1 << " " << 0 << endl;
-            }
-        }
-        streamLabels.close();
+        // streamLabels.open(labels);
+        // bool estaColoreado;
+        // for(int v=0; v<N; v++){
+        //     estaColoreado = false;
+        //     for(int j=0; j<P; j++){
+        //         if (sol[P + P*v + j] == 1) {
+        //             streamLabels << v+1 << " " << j+1 << endl;
+        //             estaColoreado = true;
+        //         }
+        //     }
+        //     if(not estaColoreado) {
+        //         streamLabels << v+1 << " " << 0 << endl;
+        //     }
+        // }
+        // streamLabels.close();
 
-        delete [] sol;
+        // delete [] sol;
     }
 
     return 0;
