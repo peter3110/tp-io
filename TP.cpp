@@ -253,7 +253,7 @@ void read(string randomness) {  // debo dividir a los vertices en 'porcentajePar
     // random -> me pasaron por parametro cuantas particiones se aceptan como maximo
     // notrandom -> una particion por nodo
     if(randomness == "random") {  
-        P = porcentajeParticiones * N;
+        P = max(int(floor(porcentajeParticiones * N)), 1);
     }    
     else if(randomness == "notrandom") {
         P = N;

@@ -1,0 +1,26 @@
+[Input]
+archivoInput=instancesNuestras/input0.in
+randomness=random
+porcentajeParticiones=1
+algoritmo=cb
+epsilonClique=0.1
+epsilonAgujero=0.1
+numeroDeModelo=0
+RECORRIDO_ARBOL=0
+VARIABLE_CORTE=0
+Semilla usada=123
+
+[Datos del problema]
+Cant Nodos=4
+Cant Aristas=4
+Porcentaje de aristas=0.666667
+Cantidad Particiones=2
+
+[Resultados]
+Funcion objetivo=1
+Tiempo en preparar=0.000144958
+Tiempo en CB=0.000421047
+Tiempo en BB=0.00160408
+Tiempo Total=0.00217009
+Cortes Clique=0
+Cortes Agujero=0
