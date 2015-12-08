@@ -22,6 +22,8 @@
 \usepackage{color}
 \usepackage{listings}
 
+\usepackage[lined, boxed, linesnumbered, commentsnumbered]{algorithm2e}
+
 \lstset{language=C++} 
 
 \definecolor{listinggray}{gray}{0.9}
@@ -152,7 +154,7 @@ Segundo Cuatrimestre de 2015
 Apellido y Nombre & LU & E-mail\\
 \hline
 Santiago Aboy Solanes & 175/12 & santiaboy2@hotmail.com \\
-Pedro Rodriguez & COMPL/ETAR & pedro3110.jim@gmail.com \\
+Pedro Rodriguez & 197/12 & pedro3110.jim@gmail.com \\
 \hline
 \end{tabular}
 
@@ -240,6 +242,72 @@ En este TP, resolvemos los MIP llamando a BB con variables binarias, y resolvemo
 \emph{Cut and branch} (A partir de ahora CB) es un algoritmo que resuelve la relajación de un MIP de forma similar a BB, con el agregado de que en algún subconjunto de los nodos del árbol explorado se realizan cálculos extra en función de la solución del nodo actual para determinar posibles planos de corte y agregarlos dinámicamente al modelo. En el TP, sólo hacemos esto en la raíz del árbol. Si alguna solución para la relajación del MIP original viola la Desigualdad 1 o 2, entonces podemos agregar una nueva restricción al modelo original con la esperanza de que más adelante, cuando pasemos a resolver el LP no relajado, debamos explorar un área de soluciones factibles menor, y así encuentre una solución óptima más rápidamente.
 
 Si $S$ es el poliedro de búsqueda de la relajación de nuestro MIP, con este algoritmo lo que hacemos es intentar reducirlo lo máximo posible hasta alcanzar (idealmente) a $conv(S)$, que es el poliedro de búsqueda más pequeño posible. Vimos en clase que las desigualdades clique generan planos de corte de alta calidad, pues cortan a $S$ exactamente en las caras del poliedro $conv(S)$.
+
+\subsection{El algoritmo}
+Para implementar el algoritmo de CB, elegimos experimentalmente tres valores arbitrarios, CANT\_CICLOS\_CB, CANT\_RESTR\_CLIQUE y CANT\_RESTR\_AGUJERO, que determinan respectivamente cuántas veces buscamos un grupo de planos de corte para agregar al LP, una cota para la cantidad de cliques a agregar en cada iteración y una cota para la cantidad de agujeros agregados en cada iteración.
+
+Tanto dameClique como dameAgujero son heurísticas golosas, que utilizamos para buscar de forma lo más rápido posible cliques o agujeros en el grafo que, dada la solución actual, violen alguna de las dos desigualdades con las que trabajamos en el TP.
+
+\begin{algorithm}[H]
+	\SetKwInOut{Input}{input}
+	\Input{modelo original relajado}
+	\For{ CANT\_CICLOS\_CB }{
+		sol $=$ resolver(modelo) \\
+		\For{ cada color posible }{
+			\For{$i$ in $0..$ CANT\_RESTR\_CLIQUE }{
+				\eIf{$ i==0 $}{
+					clique = dameClique(sol, modelo, color, nodoInicial = el de maximo peso en sol)
+				}{
+					clique = dameClique(sol, modelo, color, nodoInicial = nodo random con peso $> 0$)
+				}
+				\If{clique todavia no fue agregada al modelo}{
+					agregarRestriccionClique(modelo, clique)
+				}
+			}
+			\For{$j$ in $0..$ CANT\_RESTR\_AGUJERO}{
+				agujero = dameAgujero(sol, modelo, color) \\
+				\If{agujero todavia no fue agregado al modelo}{
+					agregarRestriccionAgujero(modelo, agujero)
+				}
+			}
+		}
+	}	
+\caption{Algoritmo para agregar restricciones de tipo clique y tipo agujero}
+\end{algorithm}
+
+
+\begin{algorithm}[H]
+	\SetKwInOut{Input}{input}
+	\Input{solucion actual (sol) + modelo original relajado + conjunto de nodos $S$ inicial (con un unico nodo) que forman una clique}
+	\While{todavia se puede agregar un nodo a la clique generada por $S$}{
+		agregar a $S$ el nodo de mayor peso en $sol$ de aquellos nodos que pueden ser agregados a $S$ de forma
+		tal que $S$ siga generando una clique
+	}
+	\eIf{la suma total de la clique es mayor a 1 + epsilonClique}{
+		exito: devolver $S$
+	}{
+		fracaso: devolver una clique vacia
+	}
+\caption{Algoritmo para generar una clique que viole la desigualdad 1}
+\end{algorithm}
+
+\begin{algorithm}[H]
+	\SetKwInOut{Input}{input}
+	\Input{solucion actual (sol) + modelo original relajado + conjunto de nodos $S$ inicial (con un unico nodo) }
+	\While{todavia se puede agregar un nodo al camino simple generado por $S$}{
+		agregar a $S$ el nodo de mayor peso en $sol$ de aquellos nodos que pueden ser agregados a $S$ de forma
+		tal que $S$ siga siendo un camino simple \\
+		\eIf{se puede agregar un nodo $x$ a $S$ de forma tal que $S$ genere un ciclo impar y ademas el peso
+		total de $S$ sea mayor a la mitad del tamaño del agujero}{
+			exito: devolver $S$
+		}{
+			fracaso: devolver un agujero vacio
+		}
+	}
+\caption{Algoritmo para generar un agujero que viole la desigualdad 2}
+\end{algorithm}
+
+
 
 \section{Demostraciones}
 
