@@ -839,7 +839,7 @@ int main(int argc, char **argv) {
             for(int color=0; color<P; color++) {
                 for(int i=0; i<CANT_RESTR_CLIQUES; i++) {
                     bool iteracionRandom = (i!=0);
-                    vector<int> clique = dameClique(sol, color,iteracionRandom);
+                    vector<int> clique = dameClique(sol, color, iteracionRandom);
                     sort(clique.begin(), clique.end());
                     bool incluido = find(agregados.begin(), agregados.end(), clique) != agregados.end();
 
@@ -847,11 +847,11 @@ int main(int argc, char **argv) {
                         agregados.push_back(clique);
                         agregarRestriccionClique(env, lp, clique);
                         cantidadCortesClique++;
-                        cout << "AGREGO RESTRICCION DE CLIQUE de random " << iteracionRandom << " y de color #"<< color << ": ";
-                        for(int j=0; j<clique.size(); j++) {
-                            cout << clique[j] << " ";
-                        }
-                        cout << endl;
+                        // cout << "AGREGO RESTRICCION DE CLIQUE de random " << iteracionRandom << " y de color #"<< color << ": ";
+                        // for(int j=0; j<clique.size(); j++) {
+                        //     cout << clique[j] << " ";
+                        // }
+                        // cout << endl;
                     }
                 }
             }
@@ -867,11 +867,11 @@ int main(int argc, char **argv) {
                         agregados.push_back(agujero);
                         agregarRestriccionAgujero(env, lp, agujero);
                         cantidadCortesAgujero++;
-                        cout << "AGREGO RESTRICCION DE AGUJERO de color #"<< color << ": ";
-                        for(int j=0; j<agujero.size(); j++) {
-                            cout << agujero[j] << " ";
-                        }
-                        cout << endl;
+                        // cout << "AGREGO RESTRICCION DE AGUJERO de color #"<< color << ": ";
+                        // for(int j=0; j<agujero.size(); j++) {
+                        //     cout << agujero[j] << " ";
+                        // }
+                        // cout << endl;
                     }
                 }
             }

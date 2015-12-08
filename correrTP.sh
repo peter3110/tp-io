@@ -6,7 +6,7 @@ FILES="instancesInternet/david.col
 instancesInternet/myciel3.col
 instancesNuestras/input0.in"
 
-semilla="123"
+semilla="456"
 
 for nombreArchivo in $FILES
 do
@@ -34,7 +34,7 @@ do
 											./TP $nombreArchivo $random $proporcion $algoritmo $epsilonClique $epsilonAgujero $numeroModelo $recorridoArbol $variableCorte $semilla
 										done
 								else
-									./TP $nombreArchivo $random $proporcion $algoritmo $epsilonClique $epsilonAgujero $numeroModelo $recorridoArbol $variableCorte $semilla
+									./TP $nombreArchivo $random 1 $algoritmo $epsilonClique $epsilonAgujero $numeroModelo $recorridoArbol $variableCorte $semilla
 								fi
 							done
 						done
