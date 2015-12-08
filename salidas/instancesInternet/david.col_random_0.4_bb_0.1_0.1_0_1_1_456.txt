@@ -1,0 +1,26 @@
+[Input]
+archivoInput=instancesInternet/david.col
+randomness=random
+porcentajeParticiones=0.4
+algoritmo=bb
+epsilonClique=0.1
+epsilonAgujero=0.1
+numeroDeModelo=0
+RECORRIDO_ARBOL=1
+VARIABLE_CORTE=1
+Semilla usada=456
+
+[Datos del problema]
+Cant Nodos=87
+Cant Aristas=406
+Porcentaje de aristas=0.108527
+Cantidad Particiones=31
+
+[Resultados]
+Funcion objetivo=2
+Tiempo en preparar=0.00668097
+Tiempo en CB=0
+Tiempo en BB=0.712155
+Tiempo Total=0.718836
+Cortes Clique=0
+Cortes Agujero=0

@@ -1,0 +1,26 @@
+[Input]
+archivoInput=instancesInternet/myciel3.col
+randomness=notrandom
+porcentajeParticiones=1
+algoritmo=cb
+epsilonClique=0.1
+epsilonAgujero=0.1
+numeroDeModelo=1
+RECORRIDO_ARBOL=1
+VARIABLE_CORTE=-1
+Semilla usada=789
+
+[Datos del problema]
+Cant Nodos=11
+Cant Aristas=20
+Porcentaje de aristas=0.363636
+Cantidad Particiones=11
+
+[Resultados]
+Funcion objetivo=4
+Tiempo en preparar=0.000170946
+Tiempo en CB=0.00309396
+Tiempo en BB=2.53857
+Tiempo Total=2.54183
+Cortes Clique=0
+Cortes Agujero=1
