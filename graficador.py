@@ -34,8 +34,8 @@ def juntarRecorridoYVariable():
                             arch = "salidas/" + nombreArchivo + "_random_" + proporcion + "_" + algoritmo + "_0.1_0.1_" + numeroModelo + "_" + recorridoArbol + "_" + variableCorte + "_" + semilla + ".txt"
                             listaValores.append(dameDict(arch)["Resultados"]["tiempo total"])
 
-                listaValores = tuple([float(x) for x in listaValores])
-                graficarSegunJuntada(listaValores, nombreArchivo.split("/")[1].split(".")[0] + "_random_" + proporcion + "_" + algoritmo + "_" + numeroModelo + "_segunJuntada")
+                    listaValores = tuple([float(x) for x in listaValores])
+                    graficarSegunJuntada(listaValores, nombreArchivo.split("/")[1].split(".")[0] + "_random_" + proporcion + "_" + algoritmo + "_" + numeroModelo + "_segunJuntada")
 
             for numeroModelo in ["0","1"]:
                 listaValores = []
@@ -45,8 +45,8 @@ def juntarRecorridoYVariable():
                         arch = "salidas/" + nombreArchivo + "_notrandom_1_" + algoritmo + "_0.1_0.1_" + numeroModelo + "_" + recorridoArbol + "_" + variableCorte + "_" + semilla + ".txt"
                         listaValores.append(dameDict(arch)["Resultados"]["tiempo total"])
 
-            listaValores = tuple([float(x) for x in listaValores])
-            graficarSegunJuntada(listaValores, nombreArchivo.split("/")[1].split(".")[0] + "_notrandom_1_" + algoritmo + "_" + numeroModelo + "_segunJuntada")
+                listaValores = tuple([float(x) for x in listaValores])
+                graficarSegunJuntada(listaValores, nombreArchivo.split("/")[1].split(".")[0] + "_notrandom_1_" + algoritmo + "_" + numeroModelo + "_segunJuntada")
 
 def prepararSegunRecorridoArbol():
     archivos = ["instancesInternet/david.col", "instancesInternet/myciel3.col", "instancesNuestras/input0.in"]
