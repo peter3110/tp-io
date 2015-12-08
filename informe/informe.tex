@@ -222,7 +222,7 @@ Este modelo es igual a Modelo Pedro, salvo que las desigualdades de color vs nod
 x_{ij} \leq w_j \ \forall \ v_i \in V, \ \forall \ j=1,\ldots,n
 \end{align*}
 
-Este último modelo tiene más restricciones que el anterior, dado un mismo grafo. En Modelo Pedro, las últimas restriccioens son $2 * P$ (donde P es la cantidad de particiones), mientras que en Modelo Santiago son $N * P$. Tener más restricciones puede llevar a que el tiempo de cómputo sea mayor. La comparación de estos modelos está en la sección \ref{comparacion-modelos}
+Este último modelo tiene más restricciones que el anterior, dado un mismo grafo. En Modelo Pedro, las últimas restricciones son $2 * P$ (donde P es la cantidad de particiones), mientras que en Modelo Santiago son $N * P$. Tener más restricciones puede llevar a que el tiempo de cómputo sea mayor. La comparación de estos modelos está en la sección \ref{comparacion-modelos}
 
 %TODO
 La implementación de estos modelos se puede observar en la sección COMPLETAR. (Apendice o seccion del informe? Vale la pena poner codigo de esto en el informe?)
@@ -232,6 +232,14 @@ La implementación de estos modelos se puede observar en la sección COMPLETAR. 
 \emph{Branch and bound} (A partir de ahora BB) es un algoritmo que consiste en enumerar soluciones candidatas, interpretándolas como un árbol de soluciones. BB explora las ramas de este árbol pero antes de enumerar las soluciones candidatas de una rama, dicha rama es comparada con la mejor solución actual y es descartada en caso que no pueda superarla.
 
 Por suerte, una vez que tenemos el problema creado en cplex, pedirle que corra BB es una sola línea: llamar a CPXmipopt con el entorno y el lp.
+
+En este TP, resolvemos los MIP llamando a BB con variables binarias, y resolvemos los LP llamándolo con variables de tipo float.
+
+\section{Cut and Branch}
+
+\emph{Cut and branch} (A partir de ahora CB) es un algoritmo que resuelve la relajación de un MIP de forma similar a BB, con el agregado de que en algún subconjunto de los nodos del árbol explorado se realizan cálculos extra en función de la solución del nodo actual para determinar posibles planos de corte y agregarlos dinámicamente al modelo. En el TP, sólo hacemos esto en la raíz del árbol. Si alguna solución para la relajación del MIP original viola la Desigualdad 1 o 2, entonces podemos agregar una nueva restricción al modelo original con la esperanza de que más adelante, cuando pasemos a resolver el LP no relajado, debamos explorar un área de soluciones factibles menor, y así encuentre una solución óptima más rápidamente.
+
+Si $S$ es el poliedro de búsqueda de la relajación de nuestro MIP, con este algoritmo lo que hacemos es intentar reducirlo lo máximo posible hasta alcanzar (idealmente) a $conv(S)$, que es el poliedro de búsqueda más pequeño posible. Vimos en clase que las desigualdades clique generan planos de corte de alta calidad, pues cortan a $S$ exactamente en las caras del poliedro $conv(S)$.
 
 \section{Demostraciones}
 
@@ -249,7 +257,7 @@ $0 \leq \sum_{p \in K} x_{pj_0}$ ya que todos los x son mayores o iguales que $0
 
 Por un lado hay un nodo coloreado por partición y, en particular, hay a lo sumo uno con el color $j_0$ por partición por la inecuación (1) de la sección \ref{modelo-pedro}. Luego, si los nodos de la clique pertenecen a una misma partición, están obligados a que a lo sumo uno tenga el color $j_0$.
 
-Si los nodos de la clique pertenecen a distinta partición, son vecinos por estar en la clique también están restringidos a que a lo sumo uno de ellos tenga el color $j_0$, por la inecuación (2) de la sección \ref{modelo-pedro}.
+Si los nodos de la clique pertenecen a distinta partición, son vecinos por estar en la clique y también están restringidos a que a lo sumo uno de ellos tenga el color $j_0$, por la inecuación (2) de la sección \ref{modelo-pedro}.
 
 Luego, $\sum_{p \in K} x_{pj_0} \leq 1$ ya que a lo sumo hay un nodo con el color $j_0$ por clique.
 
