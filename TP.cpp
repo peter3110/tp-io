@@ -31,7 +31,7 @@ int P; // CANTIDAD DE PARTICIONES
 float porcentajeParticiones; // porcentaje de particiones que paso por parametro
 string algoritmo;
 int CANT_RESTR_CLIQUES = 5;
-int CANT_RESTR_AGUJEROS = 5;
+int CANT_RESTR_AGUJEROS = 1;
 int CANT_CICLOS_CB = 5;
 double epsilonClique;
 double epsilonAgujero;
