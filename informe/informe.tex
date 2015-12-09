@@ -88,23 +88,23 @@
 
 %%%%%%%%%% Insertar diagrama - Inicio %%%%%%%%%%
 \newcommand{\diagramav}[1]{%
-  \includegraphics[type=pdf,ext=.pdf,read=.pdf,width=16cm]{diagramas/#1}%
+  \includegraphics[type=png,ext=.png,read=.png,width=16cm]{graficos/#1}%
 }
 
 \newcommand{\diagramavfig}[2]{%
   \begin{figure}[H]
-    \includegraphics[type=pdf,ext=.pdf,read=.pdf,width=16cm]{diagramas/#1}%
+    \includegraphics[type=png,ext=.png,read=.png,width=16cm]{graficos/#1}%
     \caption{#2}
     \label{fig:#1}
   \end{figure}
 }
 
 \newcommand{\diagramavtrim}[2]{%
-  \includegraphics[type=pdf,ext=.pdf,read=.pdf,width=16cm,trim=0 #2 0 0,clip]{diagramas/#1}%
+  \includegraphics[type=png,ext=.png,read=.png,width=16cm,trim=0 #2 0 0,clip]{graficos/#1}%
 }
 
 \newcommand{\diagramah}[1]{%
-  \includegraphics[type=pdf,ext=.pdf,read=.pdf,height=16cm,angle=90]{diagramas/#1}%
+  \includegraphics[type=png,ext=.png,read=.png,height=16cm,angle=90]{graficos/#1}%
 }
 %%%%%%%%%% Insertar diagrama - Fin %%%%%%%%%%
 
@@ -396,11 +396,22 @@ Si elegimos ``random'' y le damos una proporción (entre 0 y 1), nos va generar 
 
 \subsection{Experimentación de Modelo Pedro}
 
+...hacer...
 
+\diagramavfig{david_notrandom_1_bb_0_segunJuntada}{Caption de muestra}
 
 %TODO ver cuales agregamos
 
 %nombreArchivo / algoritmo / modelo (esto puede cambiarse de orden)
+
+%Dfs pareciera andar mejor
+%Cuando hay muchas particioned
+%en myciel se re ve eso
+%ahi tambien se re ve la diferencia entre cb y bb
+%y tambien esta bueno myciel para ver la diferencia entre 0.2 y 1 en % de particiones
+%input0 no se para que lo podriamos usar
+%para recorrido arbol tal vez
+
 
 
 %\subsection{Comparación Modelos}
@@ -409,6 +420,8 @@ Si elegimos ``random'' y le damos una proporción (entre 0 y 1), nos va generar 
 %\subsection{Problemas encontrados}
 
 %\subsection{Conclusiones}
+
+
 
 
 \newpage
