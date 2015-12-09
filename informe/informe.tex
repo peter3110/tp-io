@@ -382,11 +382,11 @@ Al momento de experimentar, lo hicimos con dos recorridos del árbol (\emph{Dept
 
 Para esta sección vamos a presentar los gráficos en los cuales vamos a comparar seis valores que se corresponden a las combinaciones de recorridos del árbol y las variables de corte.
 
-Realizamos uno de estos gráficos para cada combinación de archivo (``david'', ``myciel'',  ``input01''), cada algoritmo (``BB'' y ``CB'') y cada modelo(``Modelo Pedro'' y ``Modelo Santiago''). A su vez, cada archivo representa un grafo que lo particionamos de distintas maneras(``notrandom'', ``random0.2'', ``random0.4'', ``random0.8'', ``random1.0'').
+Realizamos uno de estos gráficos para cada combinación de archivo (``david'', ``myciel'',  ``input0''), cada algoritmo (``BB'' y ``CB'') y cada modelo(``Modelo Pedro'' y ``Modelo Santiago''). A su vez, cada archivo representa un grafo que lo particionamos de distintas maneras(``notrandom'', ``random0.2'', ``random0.4'', ``random0.8'', ``random1.0'').
 
 Esto genera una cantidad enorme de gráficos, y muchos de ellos no sumaban al informe y decidimos mostrar los más interesantes. Algunos de estos gráficos omitidos. se presentan en el Apéndice \ref{apendice-graficos} para mostrar algún que otro detalle.
 
-\subsection{Particón de grafos}
+\subsection{Partición de grafos}
 
 Para generarnos distintos grafos a partir de un mismo archivo, creamos un particionador de grafos.
 
@@ -394,9 +394,27 @@ Si elegimos la opcion ``notrandom'', nos va a generar una partición por nodo.
 
 Si elegimos ``random'' y le damos una proporción (entre 0 y 1), nos va generar $proporcion * cantNodos$ particiones. A cada una de estas particiones le asignamos nodos al azar, y luego borramos las particiones vacías. De esta forma, tenemos como mínimo una partición y a lo sumo $proporcion * cantNodos$ particiones.
 
-\subsection{Experimentación de Modelo Pedro}
+\subsection{Experimentación de ``input0''}
+
+Este grafo presenta la particularidad de ser muy chico: 4 nodos y 4 aristas. Nuestra intención era ver si al usar un grafo lo suficientemente pequeño, convenía usar BB en vez de CB. En los grafos siguientes comparamos las distintas maneras de recorrer un árbol y las variables de corte con el Modelo Pedro, comparando CB vs BB.
+
+\diagramavfig{input0_notrandom_1_bb_0_segunJuntada}{input0 notrandom usando Modelo Pedro y BB}
+\diagramavfig{input0_notrandom_1_cb_0_segunJuntada}{input0 notrandom usando Modelo Pedro y CB}
+
+Como se puede ver en los gráficos, BB efectivamente tarda menos que CB. Sin embargo, no rindió muchos frutos ya que los distintos resultados brindaban tiempos similares, en el rango de los pocos milisegundos. Estos milisegundos de diferencia se pueden asignar a varias razones, inclusive al \emph{scheduling}. Variar algoritmos, modelos y particiones no brindó cambios importantes.
+
+\subsection{Experimentación de ``myciel''}
 
 ...hacer...
+
+\subsection{Experimentación de ``david''}
+
+...hacer...
+
+\subsection{Comparaciones longitudinales}
+
+CB vs BB, variables de corte, recorridos del arbol en los distintos archivos.
+
 
 \diagramavfig{david_notrandom_1_bb_0_segunJuntada}{Caption de muestra}
 
