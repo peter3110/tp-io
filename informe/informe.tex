@@ -498,8 +498,20 @@ Para esto, generamos los siguientes gráficos para un mismo caso de test, varian
 Se observa que a mayor porcenaje de particiones, mayor es el tiempo que tarda nuestro algoritmo. En particular, ya con un 80 \% de particiones, el se sobrepasa nuestro límite de tiempo, que es de 50 segundos. Además, en los tres casos se puede notar que no hay diferencias significativas al variar la variable de corte o la forma de recorrer el árbol.
 
 \subsubsection{CB vs BB}
-En esta sección mostramos algunos resultados que muestran cómo nuestro algoritmo de CB mejora considerablemente para distintas instancias los tiempos de ejecución 
+En esta sección mostramos algunos resultados que muestran cómo nuestro algoritmo de CB mejora considerablemente para distintas instancias los tiempos de ejecución respecto al BB simple sin optimizaciones de CPLEX. 
 
+\diagramavfig{david_comparandoRandomsYAlgoritmos}{instancias david CB vs BB}
+Aquí se observa que cuanto mayor sea la cantidad de particiones, mayor es el aporte que hace CB: cuando hay 20 \% de particiones, casi no hay diferencia; cuando hay 40 \%, incluso BB ejecuta más rápidamente que CB. Sin embargo, para cuando hay 80 \% de particiones y más, se ve como CB sigue finalizando en un tiempo igual o menor que en 20 y 40 \%, pero que BB se va a más de 50 segundos.
+
+\diagramavfig{input0_comparandoRandomsYAlgoritmos}{instancias input0 CB vs BB}
+\diagramavfig{myciel3_comparandoRandomsYAlgoritmos}{instancias myciel3 CB vs BB}
+En los dos casos anteiores, no se ven mejoras al utilizas CB en lugar de BB. Lo atribuimos a que input0 y myciel3 son instancias muy pequeñas (4 nodos, 4 aristas y 11 nodos, 20 aristas), lo cuál hace que no valga la pena gastar tiempo en buscar cortes ya que el problema tiene pocas restricciones y pocas variables, por lo que Simplex se demora aproximadamente lo mismo en resolver el MIP versus su relajación más el MIP algunos planos de corte extra. 
+
+
+
+% TAMBIEN HABRIA QUE VER QUE CONSUMIMOS MENOS MEMORIA (NODOS?)
+
+% ============================================ 
 	
 %TODO ver cuales agregamos
 
