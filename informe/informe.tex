@@ -481,11 +481,8 @@ Modelo Pedro tarda un tiempo similar en CB respecto de BB, pero Modelo Santiago 
 
 Cabe aclarar que cuando un modelo no puede encontrar un resultado en el tiempo dado, el otro modelo tampoco lo puede hacer. Es decir, si bien Modelo Pedro tarda menos tiempo en correr, no pudimos encontrar casos donde un modelo se comporte muchísimo mejor que otro.
 
-\subsubsection{CB vs BB}
-
-CB vs BB, variables de corte, recorridos del arbol en los distintos archivos. Cantidad de particiones
-
-% Variables de corte
+\subsubsection{Variables de corte y recorrido del árbol}
+Para optimizar al máximo el tiempo de ejecución y la memoria consumida por CB y BB, experimentamos pasándole a CPLEX diferentes parámetros para efectuar el recorrido del árbol (\emph{Depth-first search} y \emph{Best-bound search}) y criterios de selección de la variable de corte (\emph{Minimum infeasibility}, \emph{CPLEX decide}, \emph{Maximum infeasibility}). En ningún caso vimos mejoras significativas al elegir uno u otra opción, sino que dependiendo del caso de test y del modelo utilizado para resolverlo, diferentes combinaciones de parámetros pueden dar diferentes (mejores y peores) resultados. De todas formas, estas variaciones son despreciables en comparación con las mejoras que obtuvimos al variar entre algoritmo de BB y CB.
 
 
 \subsubsection{Proporcion de particiones}
@@ -498,6 +495,9 @@ Para esto, generamos los siguientes gráficos para un mismo caso de test, varian
 \diagramavfig{david_random_0.8_bb_0_segunJuntada}{david random 0.8 usando Modelo Pedro y BB}
 
 Se observa que a mayor porcenaje de particiones, mayor es el tiempo que tarda nuestro algoritmo. En particular, ya con un 80 \% de particiones, el se sobrepasa nuestro límite de tiempo, que es de 50 segundos. Además, en los tres casos se puede notar que no hay diferencias significativas al variar la variable de corte o la forma de recorrer el árbol.
+
+\subsubsection{CB vs BB}
+En esta sección mostramos algunos resultados que muestran cómo nuestro algoritmo de CB mejora considerablemente para distintas instancias los tiempos de ejecución 
 
 	
 %TODO ver cuales agregamos
