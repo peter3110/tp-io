@@ -101,7 +101,7 @@
 
 \newcommand{\diagramavfigChico}[2]{%
   \begin{figure}[H]
-    \includegraphics[type=png,ext=.png,read=.png,width=8cm]{graficos/#1}%
+    \includegraphics[type=png,ext=.png,read=.png,width=\textwidth]{graficos/#1}%
     \caption{#2}
     \label{fig:#1}
   \end{figure}
@@ -391,39 +391,33 @@ Para no estar agregando restricciones de más, guardamos las restricciones agreg
 
 Para generarnos distintos grafos a partir de un mismo archivo, creamos un particionador de grafos.
 
-Si elegimos la opcion ``notrandom'', nos va a generar una partición por nodo.
+Si elegimos la opcion ``notrandom'', nos genera una partición por nodo.
 
 Si elegimos ``random'' y le damos una proporción (entre 0 y 1), nos va generar $proporcion * cantNodos$ particiones. A cada una de estas particiones le asignamos nodos al azar, y luego borramos las particiones vacías. De esta forma, tenemos como mínimo una partición y a lo sumo $proporcion * cantNodos$ particiones.
+
+Elegimos como parámetros para randomn a 0.2, 0.4, 0.8 y 1.
 
 \subsubsection{Primera aproximación}
 
 En una primera aproximación, quisimos comparar los modelos y los algoritmos para ver como se comportaban. Para poder lograr una rápida respuesta, utilizamos una partición por nodo y dejamos en los valores default al recorrido del árbol y a la variable de corte.
 
-%\begin{minipage}{\linewidth}
 
-%	\begin{minipage}{0.45\linewidth}
-
-%	\diagramav{david_notrandom_cbvsbb}
-
-%	\end{minipage}
-	
-%	\begin{minipage}{0.45\linewidth}
-
-%	\diagramav{input0_notrandom_cbvsbb}
-
-%	\end{minipage}
-
-%\end{minipage}
-
-\diagramavfig{david_notrandom_cbvsbb}{david notrandom comparando modelos y algoritmos}
-
+  \begin{minipage}{\linewidth}
+      \centering
+      \begin{minipage}{0.45\linewidth}
+	      \diagramavfigChico{david_notrandom_cbvsbb}{david notrandom comparando modelos y algoritmos}
+      \end{minipage}
+      \hspace{0.05\linewidth}
+      \begin{minipage}{0.45\linewidth}
+          \diagramavfigChico{input0_notrandom_cbvsbb}{input0 notrandom comparando modelos y algoritmos}
+      \end{minipage}
+  \end{minipage}
 
 En la figura \ref{fig:david_notrandom_cbvsbb} podemos ver que realizar CB mejora bastante respecto de BB. Asimismo, el CB de modelo Pedro, resulta más rápido.
 
+Por otro lado, en la figura \ref{fig:input0_notrandom_cbvsbb} el CB del Modelo Santiago supera a los otros modelos y algoritmos. Sin embargo, lo hace por apenas milisegundos. Ocurre que la instancia input0 es muy chica y por lo tanto sus tiempos tambien lo son.
 
-
-
-====
+Igualmente, cumplieron con nuestro propósito ya que nos permitieron ver en un pantallazo que CB es mejor que BB.
 
 Luego, para experimentar más profundamente hicimos tests con dos recorridos del árbol (\emph{Depth-first search} y \emph{Best-bound search}) y con tres variables de corte (\emph{Minimum infeasibility}, \emph{CPLEX decide}, \emph{Maximum infeasibility}).
 
@@ -431,11 +425,13 @@ Para la siguiente parte, vamos a presentar los gráficos en los cuales vamos a c
 
 Realizamos uno de estos gráficos para cada combinación de archivo (``david'', ``myciel'',  ``input0''), cada algoritmo (``BB'' y ``CB'') y cada modelo(``Modelo Pedro'' y ``Modelo Santiago''). A su vez, cada archivo representa un grafo que lo particionamos de distintas maneras(``notrandom'', ``random0.2'', ``random0.4'', ``random0.8'', ``random1.0'').
 
-Esto genera una cantidad enorme de gráficos, y muchos de ellos no sumaban al informe y decidimos mostrar los más interesantes. Algunos de estos gráficos omitidos. se presentan en el Apéndice \ref{apendice-graficos} para mostrar algún que otro detalle.
+Esto genera una cantidad enorme de gráficos, y muchos de ellos no sumaban al informe y decidimos mostrar los más interesantes. Algunos de estos gráficos omitidos, se presentan en el Apéndice \ref{apendice-graficos} para mostrar algún que otro detalle.
 
-%TODO 50 SEGUNDOS TOPE, habloar de las distintas semillas. Explicar que vamos a hablar de archivos, para luego pasar a comparaciones "longitudinales"
+Por otro lado, como la mayoría de los CB que observamos en la experimentación preliminar tardaban unos pocos segundos, pusimos un tope de tiempo de 50 segundos para CPLEX. 
 
+También, utilizamos distintas semillas y luego promediamos los resultados para poder paliar los posibles \textit{outliers}.
 
+En las siguientes secciones vamos a hablar de los archivos utilizados para luego pasar a comparar longitudinalemente los distintos modelos, algoritmos, etc. 
 
 \subsection{Experimentación de ``input0''}
 
