@@ -370,6 +370,8 @@ Tanto dameClique como dameAgujero son heurísticas golosas, que utilizamos para 
 
 La función dameClique es una función determinística. Originalmente, la llamábamos con el nodo de mayor peso. Esto generaba que realizar más de un llamado a dameClique no tenga sentido ya que devolvía siempre la misma clique. Por esto, decidimos buscar una clique con el nodo más pesado y el resto de las iteraciones comenzar desde un nodo elegido completamente al azar. Esto provoca que encuentre más restricciones, y como nos aseguramos de hacer un llamado con el nodo más pesado no encontramos menos que antes.
 
+%TODO grafico mostrando random
+
 La función dameAgujero también es determinística por lo que realizar sucesivos llamados no devuelve nuevos agujeros. El problema con realizar la misma idea que con clique es que con agujero el número a encontrar para violar depende de la cantidad de nodos del agujero (En contraposición, clique siempre compara contra 1) Entonces, comenzar con un nodo con poco peso implica que podemos no llegar a encontrar ningún agujero que viole la desigualdad. Por esta razón, decidimos dejar solamente el algoritmo determinístico.
 
 Una vez que encontramos una clique o agujero violado, lo pasamos a agregar a nuestro problema lineal. Experimentando, vimos que sucedía algo similar a esto: comenzaban todos los nodos con los colores 1 y 2 con peso 0.5. Encontrabamos una clique violada y la agregábamos. Ahora los nodos usaban los colores 3 y 4 con 0.5, y así sucesivamente. Para evitar esta ``burla'' por parte de los nodos, una vez que encontramos una clique o agujero violado, lo agregamos para todos los colores posibles.
@@ -385,6 +387,8 @@ Para esta sección vamos a presentar los gráficos en los cuales vamos a compara
 Realizamos uno de estos gráficos para cada combinación de archivo (``david'', ``myciel'',  ``input0''), cada algoritmo (``BB'' y ``CB'') y cada modelo(``Modelo Pedro'' y ``Modelo Santiago''). A su vez, cada archivo representa un grafo que lo particionamos de distintas maneras(``notrandom'', ``random0.2'', ``random0.4'', ``random0.8'', ``random1.0'').
 
 Esto genera una cantidad enorme de gráficos, y muchos de ellos no sumaban al informe y decidimos mostrar los más interesantes. Algunos de estos gráficos omitidos. se presentan en el Apéndice \ref{apendice-graficos} para mostrar algún que otro detalle.
+
+%TODO 50 SEGUNDOS TOPE
 
 \subsection{Partición de grafos}
 
@@ -413,11 +417,9 @@ Como se puede ver en los gráficos, BB efectivamente tarda menos que CB. Sin emb
 
 \subsection{Comparaciones longitudinales}
 
-CB vs BB, variables de corte, recorridos del arbol en los distintos archivos.
+CB vs BB, variables de corte, recorridos del arbol en los distintos archivos. Cantidad de particiones
 
-
-\diagramavfig{david_notrandom_1_bb_0_segunJuntada}{Caption de muestra}
-
+	
 %TODO ver cuales agregamos
 
 %nombreArchivo / algoritmo / modelo (esto puede cambiarse de orden)
