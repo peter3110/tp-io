@@ -449,11 +449,11 @@ CB vs BB, variables de corte, recorridos del arbol en los distintos archivos. Ca
 % Proporcion de particiones
 Otro aspecto que nos pareció interesante analizar es la relación entre el tiempo de ejecución y la cantidad de particiones utilizada. A mayor cantidad de particiones, se deberá colorear una mayor cantidad de nodos, respetándose además las reglas de un coloreo particionado de grafos. Y, al tener más nodos coloreados, habrá que analizar una mayor cantidad de soluciones factibles y compararlas entre sí hasta encontrar una que sea la óptima. Por eso, es esperable que a mayor cantidad de particiones, mayor sea el tiempo de ejecución.
 
-Para esto, generamos los siguientes gráficos para un mismo caso de test, variando únicamente el porcentaje de particiones utilizado (20\%, 40\% y 80\%). Utilizamos \emph{david}, que consta de 87 nodos y 412 aristas. Notar que los gráficos no están escalados de forma proporcional, y es importante observar los tiempos que figuran en los mismos para poder compararlos correctamente.
+Para esto, generamos los siguientes gráficos para un mismo caso de test, variando únicamente el porcentaje de particiones utilizado (20\%, 40\% y 80\%). Utilizamos \emph{david}, que consta de 87 nodos y 406 aristas. Notar que los gráficos no están escalados de forma proporcional, y es importante observar los tiempos que figuran en los mismos para poder compararlos correctamente.
 
-\diagramavfig{david_random_0.2_bb_0_segunJuntada}{david random 0.2 usando Modelo Santiago y BB}
-\diagramavfig{david_random_0.4_bb_0_segunJuntada}{david random 0.4 usando Modelo Santiago y CB}
-\diagramavfig{david_random_0.8_bb_0_segunJuntada}{david random 0.8 usando Modelo Santiago y CB}
+\diagramavfig{david_random_0.2_bb_0_segunJuntada}{david random 0.2 usando Modelo Pedro y BB}
+\diagramavfig{david_random_0.4_bb_0_segunJuntada}{david random 0.4 usando Modelo Pedro y BB}
+\diagramavfig{david_random_0.8_bb_0_segunJuntada}{david random 0.8 usando Modelo Pedro y BB}
 
 Se observa que a mayor porcenaje de particiones, mayor es el tiempo que tarda nuestro algoritmo. En particular, ya con un 80 \% de particiones, el se sobrepasa nuestro límite de tiempo, que es de 50 segundos. Además, en los tres casos se puede notar que no hay diferencias significativas al variar la variable de corte o la forma de recorrer el árbol.
 
