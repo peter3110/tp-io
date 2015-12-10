@@ -232,10 +232,9 @@ Este modelo es igual a Modelo Pedro, salvo que las desigualdades de color vs nod
 x_{ij} \leq w_j \ \forall \ v_i \in V, \ \forall \ j=1,\ldots,n
 \end{align*}
 
-Este último modelo tiene más restricciones que el anterior, dado un mismo grafo. En Modelo Pedro, las últimas restricciones son $2 * P$ (donde P es la cantidad de particiones), mientras que en Modelo Santiago son $N * P$. Tener más restricciones puede llevar a que el tiempo de cómputo sea mayor. %TODO La comparación de estos modelos está en la sección \ref{comparacion-modelos}
+Este último modelo tiene más restricciones que el anterior, dado un mismo grafo. En Modelo Pedro, las últimas restricciones son $2 * P$ (donde P es la cantidad de particiones), mientras que en Modelo Santiago son $N * P$. Tener más restricciones puede llevar a que el tiempo de cómputo sea mayor.
 
-%TODO
-La implementación de estos modelos se puede observar en la sección COMPLETAR. (Apendice o seccion del informe? Vale la pena poner codigo de esto en el informe?)
+La implementación de estos modelos se puede observar en la secciones \ref{codigo-modelo-pedro} y \ref{codigo-modelo-santiago} respectivamente.
 
 \section{Demostraciones}
 
@@ -398,7 +397,7 @@ Si elegimos ``random'' y le damos una proporción (entre 0 y 1), nos va generar 
 
 \subsubsection{Primera aproximación}
 
-En una primera aproximación, quisimos comparar los modelos y los algoritmos para ver como se comportaban. Para poder lograr una rápida respesta, utilizamos una partición por nodo y dejamos en los valores default al recorrido del árbol y a la variable de corte.
+En una primera aproximación, quisimos comparar los modelos y los algoritmos para ver como se comportaban. Para poder lograr una rápida respuesta, utilizamos una partición por nodo y dejamos en los valores default al recorrido del árbol y a la variable de corte.
 
 %\begin{minipage}{\linewidth}
 
@@ -419,10 +418,12 @@ En una primera aproximación, quisimos comparar los modelos y los algoritmos par
 \diagramavfig{david_notrandom_cbvsbb}{david notrandom comparando modelos y algoritmos}
 
 
-En la figura \ref{david_notrandom_cbvsbb} podemos ver que realizar CB mejora bastante respecto de BB. Asimismo, el CB de modelo Pedro, resulta más rápido.
+En la figura \ref{fig:david_notrandom_cbvsbb} podemos ver que realizar CB mejora bastante respecto de BB. Asimismo, el CB de modelo Pedro, resulta más rápido.
 
 
 
+
+====
 
 Luego, para experimentar más profundamente hicimos tests con dos recorridos del árbol (\emph{Depth-first search} y \emph{Best-bound search}) y con tres variables de corte (\emph{Minimum infeasibility}, \emph{CPLEX decide}, \emph{Maximum infeasibility}).
 
