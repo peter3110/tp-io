@@ -15,14 +15,14 @@ def dameDict(nombreArchivo):
 
 def main():
 
-    # juntarRecorridoYVariable()
+    juntarRecorridoYVariable()
     # prepararSegunRecorridoArbol()
     # prepararSegunVariableCorte()
 
     CBvsBB()
 
 def CBvsBB():
-    archivos = ["instancesInternet/david.col", "instancesInternet/myciel3.col", "instancesNuestras/input0.in", "instancesInternet/anna.col", "instancesInternet/huck.col", "instancesNuestras/queen5_5.in"]
+    archivos = ["instancesInternet/david.col", "instancesInternet/myciel3.col", "instancesNuestras/input0.in", "instancesInternet/anna.col", "instancesInternet/queen5_5.col", "instancesNuestras/huck.in"]
 
     for nombreArchivo in archivos:
         listaValores = []
@@ -190,7 +190,7 @@ def graficarSegunJuntada(listaValores, nombreGrafico):
     for i, val in enumerate(listaValores):
         plt.bar(index + bar_width * i, val, bar_width, color=colores[i], alpha=opacity, label=nombres[i])
 
-    plt.xlabel('Variable de corte, Recorrido arbol')
+    # plt.xlabel('Variable de corte, Recorrido arbol')
     plt.ylabel('Tiempo (en segundos)')
     plt.tick_params(axis='x', which='both',bottom='off',top='off',labelbottom='off')
 
@@ -207,12 +207,10 @@ def graficarSegunJuntada(listaValores, nombreGrafico):
     # fig.savefig('image_output.png', dpi=300, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.close()
 
-
 def graficarCBvsBB(listaValores, nombreGrafico):
     n_groups = 1
 
     fig = plt.figure()
-    ax = plt.subplot(111)
 
     colores = ['b', 'g', 'r', 'black', 'y']
     nombres = ["Pedro CB", "Pedro BB", "Santiago CB", "Santiago BB"]
@@ -224,21 +222,13 @@ def graficarCBvsBB(listaValores, nombreGrafico):
     for i, val in enumerate(listaValores):
         plt.bar(index + bar_width * i, val, bar_width, color=colores[i], alpha=opacity, label=nombres[i])
 
-    plt.xlabel('modelo, algoritmo')
+    # plt.xlabel('modelo, algoritmo')
     plt.ylabel('Tiempo (en segundos)')
     plt.tick_params(axis='x', which='both',bottom='off',top='off',labelbottom='off')
 
-    # Shrink current axis by 20%
-    box = ax.get_position()
-    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    plt.legend(loc='upper left')
 
-    # Put a legend to the right of the current axis
-    lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
-    # plt.legend()
-
-    plt.savefig('informe/graficos/' + nombreGrafico + '.png', format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
-    # fig.savefig('image_output.png', dpi=300, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.savefig('informe/graficos/' + nombreGrafico + '.png', format='png', dpi=300, bbox_inches='tight')
     plt.close()
 
 

@@ -88,12 +88,20 @@
 
 %%%%%%%%%% Insertar diagrama - Inicio %%%%%%%%%%
 \newcommand{\diagramav}[1]{%
-  \includegraphics[type=png,ext=.png,read=.png,width=16cm]{graficos/#1}%
+  \includegraphics[type=png,ext=.png,read=.png,width=8cm]{graficos/#1}%
 }
 
 \newcommand{\diagramavfig}[2]{%
   \begin{figure}[H]
     \includegraphics[type=png,ext=.png,read=.png,width=16cm]{graficos/#1}%
+    \caption{#2}
+    \label{fig:#1}
+  \end{figure}
+}
+
+\newcommand{\diagramavfigChico}[2]{%
+  \begin{figure}[H]
+    \includegraphics[type=png,ext=.png,read=.png,width=8cm]{graficos/#1}%
     \caption{#2}
     \label{fig:#1}
   \end{figure}
@@ -380,16 +388,6 @@ Para no estar agregando restricciones de más, guardamos las restricciones agreg
 
 \section{Desarrollo}
 
-Al momento de experimentar, lo hicimos con dos recorridos del árbol (\emph{Depth-first search} y \emph{Best-bound search}) y con tres variables de corte (\emph{Minimum infeasibility}, \emph{CPLEX decide}, \emph{Maximum infeasibility}).
-
-Para esta sección vamos a presentar los gráficos en los cuales vamos a comparar seis valores que se corresponden a las combinaciones de recorridos del árbol y las variables de corte.
-
-Realizamos uno de estos gráficos para cada combinación de archivo (``david'', ``myciel'',  ``input0''), cada algoritmo (``BB'' y ``CB'') y cada modelo(``Modelo Pedro'' y ``Modelo Santiago''). A su vez, cada archivo representa un grafo que lo particionamos de distintas maneras(``notrandom'', ``random0.2'', ``random0.4'', ``random0.8'', ``random1.0'').
-
-Esto genera una cantidad enorme de gráficos, y muchos de ellos no sumaban al informe y decidimos mostrar los más interesantes. Algunos de estos gráficos omitidos. se presentan en el Apéndice \ref{apendice-graficos} para mostrar algún que otro detalle.
-
-%TODO 50 SEGUNDOS TOPE, habloar de las distintas semillas. Explicar que vamos a hablar de archivos, para luego pasar a comparaciones "longitudinales"
-
 \subsection{Partición de grafos}
 
 Para generarnos distintos grafos a partir de un mismo archivo, creamos un particionador de grafos.
@@ -397,6 +395,46 @@ Para generarnos distintos grafos a partir de un mismo archivo, creamos un partic
 Si elegimos la opcion ``notrandom'', nos va a generar una partición por nodo.
 
 Si elegimos ``random'' y le damos una proporción (entre 0 y 1), nos va generar $proporcion * cantNodos$ particiones. A cada una de estas particiones le asignamos nodos al azar, y luego borramos las particiones vacías. De esta forma, tenemos como mínimo una partición y a lo sumo $proporcion * cantNodos$ particiones.
+
+\subsubsection{Primera aproximación}
+
+En una primera aproximación, quisimos comparar los modelos y los algoritmos para ver como se comportaban. Para poder lograr una rápida respesta, utilizamos una partición por nodo y dejamos en los valores default al recorrido del árbol y a la variable de corte.
+
+%\begin{minipage}{\linewidth}
+
+%	\begin{minipage}{0.45\linewidth}
+
+%	\diagramav{david_notrandom_cbvsbb}
+
+%	\end{minipage}
+	
+%	\begin{minipage}{0.45\linewidth}
+
+%	\diagramav{input0_notrandom_cbvsbb}
+
+%	\end{minipage}
+
+%\end{minipage}
+
+\diagramavfig{david_notrandom_cbvsbb}{david notrandom comparando modelos y algoritmos}
+
+
+En la figura \ref{david_notrandom_cbvsbb} podemos ver que realizar CB mejora bastante respecto de BB. Asimismo, el CB de modelo Pedro, resulta más rápido.
+
+
+
+
+Luego, para experimentar más profundamente hicimos tests con dos recorridos del árbol (\emph{Depth-first search} y \emph{Best-bound search}) y con tres variables de corte (\emph{Minimum infeasibility}, \emph{CPLEX decide}, \emph{Maximum infeasibility}).
+
+Para la siguiente parte, vamos a presentar los gráficos en los cuales vamos a comparar seis valores que se corresponden a las combinaciones de recorridos del árbol y las variables de corte.
+
+Realizamos uno de estos gráficos para cada combinación de archivo (``david'', ``myciel'',  ``input0''), cada algoritmo (``BB'' y ``CB'') y cada modelo(``Modelo Pedro'' y ``Modelo Santiago''). A su vez, cada archivo representa un grafo que lo particionamos de distintas maneras(``notrandom'', ``random0.2'', ``random0.4'', ``random0.8'', ``random1.0'').
+
+Esto genera una cantidad enorme de gráficos, y muchos de ellos no sumaban al informe y decidimos mostrar los más interesantes. Algunos de estos gráficos omitidos. se presentan en el Apéndice \ref{apendice-graficos} para mostrar algún que otro detalle.
+
+%TODO 50 SEGUNDOS TOPE, habloar de las distintas semillas. Explicar que vamos a hablar de archivos, para luego pasar a comparaciones "longitudinales"
+
+
 
 \subsection{Experimentación de ``input0''}
 
