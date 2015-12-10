@@ -19,7 +19,8 @@ def main():
     # prepararSegunRecorridoArbol()
     # prepararSegunVariableCorte()
 
-    CBvsBB()
+    # CBvsBB()
+    CBvsBBDavid()
 
 def CBvsBB():
     archivos = ["instancesInternet/david.col", "instancesInternet/myciel3.col", "instancesNuestras/input0.in", "instancesInternet/anna.col", "instancesInternet/queen5_5.col", "instancesInternet/huck.col"]
@@ -42,6 +43,39 @@ def CBvsBB():
 
         listaValores = tuple([float(x) for x in listaValores])
         graficarCBvsBB(listaValores, nombreArchivo.split("/")[1].split(".")[0] + "_notrandom_cbvsbb")
+
+def CBvsBBDavid():
+    archivos = ["instancesInternet/david.col", "instancesInternet/myciel3.col", "instancesNuestras/input0.in"]
+
+    variableCorte = "0"
+    recorridoArbol = "1"
+    numeroModelo = "0"
+
+    for nombreArchivo in archivos:
+        listaValores = []
+        for algoritmo in ["cb","bb"]:
+            sublista = []
+            
+            total = 0
+            for semilla in ["123", "456", "789"]:
+                arch = "salidas/" + nombreArchivo + "_notrandom_1_" + algoritmo + "_0.1_0.1_" + numeroModelo + "_" + recorridoArbol + "_" + variableCorte + "_" + semilla + ".txt"
+                total += float(dameDict(arch)["Resultados"]["tiempo total"])
+
+            sublista.append(total / 3.0)
+
+            for proporcion in ["0.2", "0.4", "0.8", "1"]:
+                
+                total = 0
+                for semilla in ["123", "456", "789"]:
+                    arch = "salidas/" + nombreArchivo + "_random_" + proporcion + "_" + algoritmo + "_0.1_0.1_" + numeroModelo + "_" + recorridoArbol + "_" + variableCorte + "_" + semilla + ".txt"
+                    total += float(dameDict(arch)["Resultados"]["tiempo total"])
+
+                sublista.append(total / 3.0)
+
+            sublista = tuple([float(x) for x in sublista])
+            listaValores.append(sublista)
+
+        graficarCBvsBBDavid(listaValores, nombreArchivo.split("/")[1].split(".")[0] + "_comparandoRandomsYAlgoritmos")
 
 
 def juntarRecorridoYVariable():
@@ -230,6 +264,28 @@ def graficarCBvsBB(listaValores, nombreGrafico):
     plt.legend(loc='upper left')
 
     plt.savefig('informe/graficos/' + nombreGrafico + '.png', format='png', dpi=300, bbox_inches='tight')
+    plt.close()
+
+def graficarCBvsBBDavid(listaValores, nombreGrafico):
+    n_groups = 5
+
+    fig = plt.subplots()
+    colores = ['b', 'r']
+    nombres = ['CB', 'BB']
+
+    index = np.arange(n_groups)
+    bar_width = 0.4
+    opacity = 0.5
+
+    for i, val in enumerate(listaValores):
+        plt.bar(index + bar_width * i, val, bar_width, color=colores[i], alpha=opacity, label=nombres[i])
+
+    plt.xlabel('Manera de particionar el grafo')
+    plt.ylabel('Tiempo (en segundos)')
+    plt.xticks(index + bar_width, ("notrandom", "random0.2", "random0.4", "random0.8", "random1"))
+    plt.legend()
+
+    plt.savefig('informe/graficos/' + nombreGrafico + '.png')
     plt.close()
 
 
