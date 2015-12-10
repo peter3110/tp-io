@@ -167,7 +167,7 @@ def graficarSegunJuntada(listaValores, nombreGrafico):
         plt.bar(index + bar_width * i, val, bar_width, color=colores[i], alpha=opacity, label=nombres[i])
 
     plt.xlabel('Variable de corte, Recorrido arbol')
-    plt.ylabel('Tiempo')
+    plt.ylabel('Tiempo (en segundos)')
     plt.tick_params(axis='x', which='both',bottom='off',top='off',labelbottom='off')
 
     # Shrink current axis by 20%
