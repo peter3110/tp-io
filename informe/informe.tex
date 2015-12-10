@@ -443,12 +443,6 @@ Modelo Pedro tarda un tiempo similar en CB respecto de BB, pero Modelo Santiago 
 
 Cabe aclarar que cuando un modelo no puede encontrar un resultado en el tiempo dado, el otro modelo tampoco lo puede hacer. Es decir, si bien Modelo Pedro tarda menos tiempo en correr, no pudimos encontrar casos donde un modelo se comporte muchísimo mejor que otro.
 
-\subsubsection{CB vs BB}
-
-CB vs BB, variables de corte, recorridos del arbol en los distintos archivos. Cantidad de particiones
-
-% Variables de corte
-
 
 \subsubsection{Proporcion de particiones}
 Otro aspecto que nos pareció interesante analizar es la relación entre el tiempo de ejecución y la cantidad de particiones utilizada. A mayor cantidad de particiones, se deberá colorear una mayor cantidad de nodos, respetándose además las reglas de un coloreo particionado de grafos. Y, al tener más nodos coloreados, habrá que analizar una mayor cantidad de soluciones factibles y compararlas entre sí hasta encontrar una que sea la óptima. Por eso, es esperable que a mayor cantidad de particiones, mayor sea el tiempo de ejecución.
@@ -461,6 +455,10 @@ Para esto, generamos los siguientes gráficos para un mismo caso de test, varian
 
 Se observa que a mayor porcenaje de particiones, mayor es el tiempo que tarda nuestro algoritmo. En particular, ya con un 80 \% de particiones, el se sobrepasa nuestro límite de tiempo, que es de 50 segundos. Además, en los tres casos se puede notar que no hay diferencias significativas al variar la variable de corte o la forma de recorrer el árbol.
 
+\subsubsection{Variables de corte y Recorrido del árbol}
+En general, no observamos cambios importantes en 
+
+\subsubsection{CB vs BB}
 	
 %TODO ver cuales agregamos
 
