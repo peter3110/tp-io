@@ -10,8 +10,8 @@ ILOSTLBEGIN
 #define TOL 0.1
 #define TIEMPO_LIMITE 50
 
-/* INPUT: recibe 3 parametros: 
- * i)  archivo .in del cual leer, en el formato especificado.
+/* INPUT: recibe 10 parametros: 
+ * i)  archivo del cual leer, en el formato especificado.
  * ii) "random" o "notrandom", dependiendo de si quiero que las P particiones sean
  *     random o quiero que se asigne 1 particion distinta a cada nodo
  * iii)proporcion de particiones / cantNodos (en caso de haber elegido notrandom SE IGNORA) --> 0 <= num <= 1
