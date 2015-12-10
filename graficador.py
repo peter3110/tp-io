@@ -15,9 +15,33 @@ def dameDict(nombreArchivo):
 
 def main():
 
-    juntarRecorridoYVariable()
+    # juntarRecorridoYVariable()
     # prepararSegunRecorridoArbol()
     # prepararSegunVariableCorte()
+
+    CBvsBB()
+
+def CBvsBB():
+    archivos = ["instancesInternet/david.col", "instancesInternet/myciel3.col", "instancesNuestras/input0.in", "instancesInternet/anna.col", "instancesInternet/huck.col", "instancesNuestras/queen5_5.in"]
+
+    for nombreArchivo in archivos:
+        listaValores = []
+        for numeroModelo in ["0","1"]:
+            for algoritmo in ["cb","bb"]:
+                total = 0
+
+                for variableCorte in ["0"]:
+                    for recorridoArbol in ["1"]:
+                        
+                        for semilla in ["123", "456", "789"]:
+                            arch = "salidas/" + nombreArchivo + "_notrandom_1_" + algoritmo + "_0.1_0.1_" + numeroModelo + "_" + recorridoArbol + "_" + variableCorte + "_" + semilla + ".txt"
+                            total += float(dameDict(arch)["Resultados"]["tiempo total"])
+
+                listaValores.append(total / 3.0)
+
+        listaValores = tuple([float(x) for x in listaValores])
+        graficarCBvsBB(listaValores, nombreArchivo.split("/")[1].split(".")[0] + "_notrandom_cbvsbb")
+
 
 def juntarRecorridoYVariable():
     archivos = ["instancesInternet/david.col", "instancesInternet/myciel3.col", "instancesNuestras/input0.in"]
@@ -182,6 +206,41 @@ def graficarSegunJuntada(listaValores, nombreGrafico):
     plt.savefig('informe/graficos/' + nombreGrafico + '.png', format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
     # fig.savefig('image_output.png', dpi=300, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.close()
+
+
+def graficarCBvsBB(listaValores, nombreGrafico):
+    n_groups = 1
+
+    fig = plt.figure()
+    ax = plt.subplot(111)
+
+    colores = ['b', 'g', 'r', 'black', 'y']
+    nombres = ["Pedro CB", "Pedro BB", "Santiago CB", "Santiago BB"]
+
+    index = np.arange(n_groups)
+    bar_width = 0.1
+    opacity = 0.5
+
+    for i, val in enumerate(listaValores):
+        plt.bar(index + bar_width * i, val, bar_width, color=colores[i], alpha=opacity, label=nombres[i])
+
+    plt.xlabel('modelo, algoritmo')
+    plt.ylabel('Tiempo (en segundos)')
+    plt.tick_params(axis='x', which='both',bottom='off',top='off',labelbottom='off')
+
+    # Shrink current axis by 20%
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+    # Put a legend to the right of the current axis
+    lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+    # plt.legend()
+
+    plt.savefig('informe/graficos/' + nombreGrafico + '.png', format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+    # fig.savefig('image_output.png', dpi=300, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.close()
+
 
 if __name__ == '__main__':
     main()
