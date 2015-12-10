@@ -18,9 +18,9 @@ Cantidad Particiones=138
 
 [Resultados]
 Funcion objetivo=11
-Tiempo en preparar=0.0325739
-Tiempo en CB=44.2429
-Tiempo en BB=4.44289
-Tiempo Total=48.7183
+Tiempo en preparar=0.0216141
+Tiempo en CB=44.7363
+Tiempo en BB=4.48609
+Tiempo Total=49.244
 Cortes Clique=21
 Cortes Agujero=1
