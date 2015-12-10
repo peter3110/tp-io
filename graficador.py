@@ -15,14 +15,14 @@ def dameDict(nombreArchivo):
 
 def main():
 
-    juntarRecorridoYVariable()
+    # juntarRecorridoYVariable()
     # prepararSegunRecorridoArbol()
     # prepararSegunVariableCorte()
 
     CBvsBB()
 
 def CBvsBB():
-    archivos = ["instancesInternet/david.col", "instancesInternet/myciel3.col", "instancesNuestras/input0.in", "instancesInternet/anna.col", "instancesInternet/queen5_5.col", "instancesNuestras/huck.in"]
+    archivos = ["instancesInternet/david.col", "instancesInternet/myciel3.col", "instancesNuestras/input0.in", "instancesInternet/anna.col", "instancesInternet/queen5_5.col", "instancesInternet/huck.col"]
 
     for nombreArchivo in archivos:
         listaValores = []
@@ -35,6 +35,7 @@ def CBvsBB():
                         
                         for semilla in ["123", "456", "789"]:
                             arch = "salidas/" + nombreArchivo + "_notrandom_1_" + algoritmo + "_0.1_0.1_" + numeroModelo + "_" + recorridoArbol + "_" + variableCorte + "_" + semilla + ".txt"
+                            print arch
                             total += float(dameDict(arch)["Resultados"]["tiempo total"])
 
                 listaValores.append(total / 3.0)
