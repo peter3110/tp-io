@@ -431,7 +431,9 @@ Recordamos que 50 segundos es el tope que corrimos por la instancia david, por l
 
 En este mismo caso, el modelo Santiago presenta mejoras significativas (tardando alrededor de 10 segundos) pero el Modelo Pedro supera una vez más el tiempo de ejecución.
 
-\subsection{Comparación entre modelos}
+\subsection{Comparaciones longitudinales}
+
+\subsubsection{Comparación entre modelos}
 
 El Modelo Pedro se comporta mejor que el Modelo Santiago en la mayoría de los casos. Incluso cuando se comporta peor, la diferencia es de unos pocos milisegundos. Observando detenidamente las salidas pudimos ver que la diferencia está en el tiempo que tarda en las iteraciones de planos de corte.
 
@@ -439,21 +441,21 @@ Modelo Pedro tarda un tiempo similar en CB respecto de BB, pero Modelo Santiago 
 
 Cabe aclarar que cuando un modelo no puede encontrar un resultado en el tiempo dado, el otro modelo tampoco lo puede hacer. Es decir, si bien Modelo Pedro tarda menos tiempo en correr, no pudimos encontrar casos donde un modelo se comporte muchísimo mejor que otro.
 
-\subsection{Comparaciones longitudinales}
+\subsubsection{CB vs BB}
 
 CB vs BB, variables de corte, recorridos del arbol en los distintos archivos. Cantidad de particiones
 
 % Variables de corte
 
 
-% Proporcion de particiones
+\subsubsection{Proporcion de particiones}
 Otro aspecto que nos pareció interesante analizar es la relación entre el tiempo de ejecución y la cantidad de particiones utilizada. A mayor cantidad de particiones, se deberá colorear una mayor cantidad de nodos, respetándose además las reglas de un coloreo particionado de grafos. Y, al tener más nodos coloreados, habrá que analizar una mayor cantidad de soluciones factibles y compararlas entre sí hasta encontrar una que sea la óptima. Por eso, es esperable que a mayor cantidad de particiones, mayor sea el tiempo de ejecución.
 
-Para esto, generamos los siguientes gráficos para un mismo caso de test, variando únicamente el porcentaje de particiones utilizado (20\%, 40\% y 80\%). Utilizamos \emph{david}, que consta de 87 nodos y 412 aristas. Notar que los gráficos no están escalados de forma proporcional, y es importante observar los tiempos que figuran en los mismos para poder compararlos correctamente.
+Para esto, generamos los siguientes gráficos para un mismo caso de test, variando únicamente el porcentaje de particiones utilizado (20\%, 40\% y 80\%). Utilizamos \emph{david}, que consta de 87 nodos y 406 aristas. Notar que los gráficos no están escalados de forma proporcional, y es importante observar los tiempos que figuran en los mismos para poder compararlos correctamente.
 
-\diagramavfig{david_random_0.2_bb_0_segunJuntada}{david random 0.2 usando Modelo Santiago y BB}
-\diagramavfig{david_random_0.4_bb_0_segunJuntada}{david random 0.4 usando Modelo Santiago y CB}
-\diagramavfig{david_random_0.8_bb_0_segunJuntada}{david random 0.8 usando Modelo Santiago y CB}
+\diagramavfig{david_random_0.2_bb_0_segunJuntada}{david random 0.2 usando Modelo Pedro y BB}
+\diagramavfig{david_random_0.4_bb_0_segunJuntada}{david random 0.4 usando Modelo Pedro y BB}
+\diagramavfig{david_random_0.8_bb_0_segunJuntada}{david random 0.8 usando Modelo Pedro y BB}
 
 Se observa que a mayor porcenaje de particiones, mayor es el tiempo que tarda nuestro algoritmo. En particular, ya con un 80 \% de particiones, el se sobrepasa nuestro límite de tiempo, que es de 50 segundos. Además, en los tres casos se puede notar que no hay diferencias significativas al variar la variable de corte o la forma de recorrer el árbol.
 
