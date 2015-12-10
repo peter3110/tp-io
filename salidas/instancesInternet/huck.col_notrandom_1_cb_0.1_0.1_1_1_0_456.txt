@@ -1,0 +1,26 @@
+[Input]
+archivoInput=instancesInternet/huck.col
+randomness=notrandom
+porcentajeParticiones=1
+algoritmo=cb
+epsilonClique=0.1
+epsilonAgujero=0.1
+numeroDeModelo=1
+RECORRIDO_ARBOL=1
+VARIABLE_CORTE=0
+Semilla usada=456
+
+[Datos del problema]
+Cant Nodos=74
+Cant Aristas=301
+Porcentaje de aristas=0.11144
+Cantidad Particiones=74
+
+[Resultados]
+Funcion objetivo=11
+Tiempo en preparar=0.00500488
+Tiempo en CB=5.74369
+Tiempo en BB=0.446119
+Tiempo Total=6.19481
+Cortes Clique=13
+Cortes Agujero=5

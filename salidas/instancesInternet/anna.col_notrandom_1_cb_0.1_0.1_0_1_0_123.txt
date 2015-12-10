@@ -1,0 +1,26 @@
+[Input]
+archivoInput=instancesInternet/anna.col
+randomness=notrandom
+porcentajeParticiones=1
+algoritmo=cb
+epsilonClique=0.1
+epsilonAgujero=0.1
+numeroDeModelo=0
+RECORRIDO_ARBOL=1
+VARIABLE_CORTE=0
+Semilla usada=123
+
+[Datos del problema]
+Cant Nodos=138
+Cant Aristas=493
+Porcentaje de aristas=0.0521528
+Cantidad Particiones=138
+
+[Resultados]
+Funcion objetivo=11
+Tiempo en preparar=0.0162139
+Tiempo en CB=2.52314
+Tiempo en BB=2.69111
+Tiempo Total=5.23047
+Cortes Clique=8
+Cortes Agujero=0

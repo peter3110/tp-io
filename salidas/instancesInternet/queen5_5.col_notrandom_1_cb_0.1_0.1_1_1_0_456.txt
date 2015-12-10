@@ -1,0 +1,26 @@
+[Input]
+archivoInput=instancesInternet/queen5_5.col
+randomness=notrandom
+porcentajeParticiones=1
+algoritmo=cb
+epsilonClique=0.1
+epsilonAgujero=0.1
+numeroDeModelo=1
+RECORRIDO_ARBOL=1
+VARIABLE_CORTE=0
+Semilla usada=456
+
+[Datos del problema]
+Cant Nodos=25
+Cant Aristas=160
+Porcentaje de aristas=0.533333
+Cantidad Particiones=25
+
+[Resultados]
+Funcion objetivo=5
+Tiempo en preparar=0.00107408
+Tiempo en CB=0.170502
+Tiempo en BB=0.0634971
+Tiempo Total=0.235073
+Cortes Clique=16
+Cortes Agujero=4
