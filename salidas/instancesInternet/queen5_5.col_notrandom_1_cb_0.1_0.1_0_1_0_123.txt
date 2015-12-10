@@ -18,9 +18,9 @@ Cantidad Particiones=25
 
 [Resultados]
 Funcion objetivo=5
-Tiempo en preparar=0.00613403
-Tiempo en CB=0.179317
-Tiempo en BB=0.359843
-Tiempo Total=0.545294
+Tiempo en preparar=0.00247407
+Tiempo en CB=0.197158
+Tiempo en BB=0.364802
+Tiempo Total=0.564434
 Cortes Clique=17
 Cortes Agujero=9
