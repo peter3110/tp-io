@@ -179,7 +179,7 @@ Pedro Rodriguez & 197/12 & pedro3110.jim@gmail.com \\
 
 El problema de coloreo particionado de grafos es una generalización del problema de coloreo de grafos. Al igual que en coloreo, se tiene un grafo $G = (V,E)$ siendo $V$ los nodos del grafo y $E$ sus aristas.
 
-En coloreo particionado, el conjunto $V$ se encuentra dividido en una partición $V_1, \ldots, V_k$. El objetivo es asignar un color a sólo un vértice de cada partición de manera tal que dos vértices adyacentes no reciban el mismo color, minimizando la cantidad de colores utilizados.
+En coloreo particionado, el conjunto $V$ se encuentra dividido en una partición $V_1, \ldots, V_k$. El objetivo es asignar un color a exactamente un sólo vértice de cada partición de manera tal que dos vértices adyacentes no reciban el mismo color, minimizando la cantidad de colores utilizados.
 
 \section{Modelos Utilizados}
 
@@ -234,7 +234,7 @@ x_{ij} \leq w_j \ \forall \ v_i \in V, \ \forall \ j=1,\ldots,n
 
 Este último modelo tiene más restricciones que el anterior, dado un mismo grafo. En Modelo Pedro, las últimas restricciones son $2 * P$ (donde P es la cantidad de particiones), mientras que en Modelo Santiago son $N * P$. Tener más restricciones puede llevar a que el tiempo de cómputo sea mayor.
 
-La implementación de estos modelos se puede observar en la secciones \ref{codigo-modelo-pedro} y \ref{codigo-modelo-santiago} respectivamente.
+La implementación de estos modelos se puede observar en el apéndice \ref{apendice-codigo}.
 
 \section{Demostraciones}
 
@@ -299,15 +299,17 @@ Luego, vale la desigualdad 2.
 
 Por suerte, una vez que tenemos el problema creado en cplex, pedirle que corra BB es una sola línea: llamar a CPXmipopt con el entorno y el lp.
 
-En este TP, resolvemos los MIP llamando a BB con variables binarias, y resolvemos los LP llamándolo con variables de tipo float.
-
 \section{Cut and Branch}
 
-\emph{Cut and branch} (A partir de ahora CB) es un algoritmo que resuelve la relajación de un MIP de forma similar a BB, con el agregado de que en algún subconjunto de los nodos del árbol explorado se realizan cálculos extra en función de la solución del nodo actual para determinar posibles planos de corte y agregarlos dinámicamente al modelo. En el TP, sólo hacemos esto en la raíz del árbol. Si alguna solución para la relajación del MIP original viola la Desigualdad 1 o 2, entonces podemos agregar una nueva restricción al modelo original con la esperanza de que más adelante, cuando pasemos a resolver el LP no relajado, debamos explorar un área de soluciones factibles menor, y así encuentre una solución óptima más rápidamente.
+\emph{Cut and branch} (A partir de ahora CB) es un algoritmo que resuelve la relajación de un MIP de forma similar a BB, con el agregado de que en algún subconjunto de los nodos del árbol explorado se realizan cálculos extra en función de la solución del nodo actual para determinar posibles planos de corte y agregarlos dinámicamente al modelo.
+
+En el trabajo práctico vamos a resolver la relajación del MIP, y si alguna solución esta relajación viola la desigualdad 1 o 2, entonces vamos a agregar una nueva restricción al modelo original. Esto lo realizamos con la esperanza de que más adelante, cuando pasemos a resolver una nueva relajación podamos encontrar nuevas restricciones. Esto contribuye a que cuando resolvamos el LP no relajado, debamos explorar un área de soluciones factibles menor, y así encuentre una solución óptima más rápidamente.
 
 Si $S$ es el poliedro de búsqueda de la relajación de nuestro MIP, con este algoritmo lo que hacemos es intentar reducirlo lo máximo posible hasta alcanzar (idealmente) a $conv(S)$, que es el poliedro de búsqueda más pequeño posible. Vimos en clase que las desigualdades clique generan planos de corte de alta calidad, pues cortan a $S$ exactamente en las caras del poliedro $conv(S)$.
 
 \subsection{Llevándolo a la implementación}
+
+En este trabajo práctico, resolvemos los MIP llamando a BB con variables binarias, y resolvemos los LP llamándolo con variables de tipo float.
 
 Para implementar el algoritmo de CB, elegimos experimentalmente tres valores: CANT\_CICLOS\_CB, CANT\_RESTR\_CLIQUE y CANT\_RESTR\_AGUJERO, que determinan respectivamente cuántas veces buscamos un grupo de planos de corte para agregar al LP, una cota para la cantidad de cliques a agregar en cada iteración y una cota para la cantidad de agujeros agregados en cada iteración.
 
@@ -365,7 +367,7 @@ Tanto dameClique como dameAgujero son heurísticas golosas, que utilizamos para 
 		agregar a $S$ el nodo de mayor peso en $sol$ de aquellos nodos que pueden ser agregados a $S$ de forma
 		tal que $S$ siga siendo un camino simple \\
 		\eIf{se puede agregar un nodo $x$ a $S$ de forma tal que $S$ genere un ciclo impar y ademas el peso
-		total de $S$ sea mayor a la mitad del tamaño del agujero}{
+		total de $S$ sea mayor a la mitad del tamaño del agujero + epsilonAgujero}{
 			exito: devolver $S$
 		}{
 			fracaso: devolver un agujero vacio
@@ -377,7 +379,7 @@ Tanto dameClique como dameAgujero son heurísticas golosas, que utilizamos para 
 
 La función dameClique es una función determinística. Originalmente, la llamábamos con el nodo de mayor peso. Esto generaba que realizar más de un llamado a dameClique no tenga sentido ya que devolvía siempre la misma clique. 
 
-Por esto, decidimos buscar una clique con el nodo más pesado y el resto de las iteraciones comenzar desde un nodo elegido completamente al azar. Esto provoca que encuentre más restricciones, y como nos aseguramos de hacer un llamado con el nodo más pesado no encontramos menos que antes.
+Por esto, decidimos buscar una clique con el nodo más pesado y el resto de las iteraciones comenzar desde un nodo elegido completamente al azar. Esto provoca que encuentre más restricciones, y como nos aseguramos de hacer un llamado con el nodo más pesado no nos perdemos de encontrar la clique de antes.
 
 Esta técnica, nos permitió encontrar hasta 4 veces más cliques y nos ayudó a bajar el tiempo de ejecución de los algoritmos de CB.
 
@@ -385,7 +387,7 @@ La función dameAgujero también es determinística por lo que realizar sucesivo
 
 Una vez que encontramos una clique o agujero violado, lo pasamos a agregar a nuestro problema lineal. Experimentando, vimos que sucedía algo similar a esto: comenzaban todos los nodos con los colores 1 y 2 con peso 0.5. Encontrabamos una clique violada y la agregábamos. Ahora los nodos usaban los colores 3 y 4 con 0.5, y así sucesivamente. Para evitar esta ``burla'' por parte de los nodos, una vez que encontramos una clique o agujero violado, lo agregamos para todos los colores posibles.
 
-Para no estar agregando restricciones de más, guardamos las restricciones agregadas en cada iteración de planos de corte y comparamos la que vamos a agregar con las agregadas anteriormente. Como en la nueva iteración, no vamos a encontrar la misma violación estas ``restricciones agregadas'' pueden ser limpiadas en cada iteración de planos de corte y así liberar memoria.
+Para no estar agregando restricciones de más, guardamos las restricciones agregadas en cada iteración de planos de corte y comparamos la que vamos a agregar con las agregadas en esa misma iteración. Como en una nueva iteración, no vamos a encontrar la misma violación estas ``restricciones agregadas'' pueden ser limpiadas en cada iteración de planos de corte y así liberar memoria.
 
 \section{Desarrollo}
 
@@ -397,19 +399,21 @@ Si elegimos la opcion ``notrandom'', nos genera una partición por nodo.
 
 Si elegimos ``random'' y le damos una proporción (entre 0 y 1), nos va generar $proporcion * cantNodos$ particiones. A cada una de estas particiones le asignamos nodos al azar, y luego borramos las particiones vacías. De esta forma, tenemos como mínimo una partición y a lo sumo $proporcion * cantNodos$ particiones.
 
-Elegimos como parámetros para randomn a 0.2, 0.4, 0.8 y 1.
+Elegimos como parámetros para random a 0.2, 0.4, 0.8 y 1.
 
 \subsubsection{Primera aproximación}
 
 En una primera aproximación, quisimos comparar los modelos y los algoritmos para ver como se comportaban. Para poder lograr una rápida respuesta, utilizamos una partición por nodo y dejamos en los valores default al recorrido del árbol y a la variable de corte.
 
+A continuación vamos a mostrar gráficos utilizando algunas instancias, comparando los distintos modelos (Pedro y Santiago) y algoritmos(BB y CB).
+
   \begin{minipage}{\linewidth}
       \centering
       \begin{minipage}{0.49\linewidth}
-	      \diagramavfigChico{david_notrandom_cbvsbb}{david notrandom comparando modelos y algoritmos}
+	      \diagramavfigChico{david_notrandom_cbvsbb}{instancia david.col}
       \end{minipage}
       \begin{minipage}{0.49\linewidth}
-          \diagramavfigChico{input0_notrandom_cbvsbb}{input0 notrandom comparando modelos y algoritmos}
+          \diagramavfigChico{input0_notrandom_cbvsbb}{instancia input0.in}
       \end{minipage}
   \end{minipage}
 
@@ -417,7 +421,19 @@ En la figura \ref{fig:david_notrandom_cbvsbb} podemos ver que realizar CB mejora
 
 Por otro lado, en la figura \ref{fig:input0_notrandom_cbvsbb} el CB del Modelo Santiago supera a los otros modelos y algoritmos. Sin embargo, lo hace por apenas milisegundos. Ocurre que la instancia input0 es muy chica y por lo tanto sus tiempos tambien lo son.
 
-Igualmente, cumplieron con nuestro propósito ya que nos permitieron ver en un pantallazo que CB es mejor que BB.
+  \begin{minipage}{\linewidth}
+      \centering
+      \begin{minipage}{0.49\linewidth}
+	      \diagramavfigChico{anna_notrandom_cbvsbb}{instancia anna.col}
+      \end{minipage}
+      \begin{minipage}{0.49\linewidth}
+          \diagramavfigChico{huck_notrandom_cbvsbb}{instancia huck.col}
+      \end{minipage}
+  \end{minipage}
+
+En estas dos figuras, podemos ver que la tendencia que CB es mejor que BB continúa en otras instancias.
+
+Queremos aclarar que \textit{anna} (figura \ref{fig:anna_notrandom_cbvsbb}) es una instancia que es más grande que las que vamos a testear en este trabajo práctico. Con 138 nodos y 493 aristas nos sirve como prueba de fuego y nos permite ver que el Modelo Pedro se perfila a ser el más rápido de ambos.
 
 \subsection{Experimentación más a fondo}
 
@@ -425,7 +441,7 @@ Para experimentar más profundamente hicimos tests con dos recorridos del árbol
 
 Para la siguiente parte, vamos a presentar los gráficos en los cuales vamos a comparar seis valores que se corresponden a las combinaciones de recorridos del árbol y las variables de corte.
 
-Realizamos uno de estos gráficos para cada combinación de archivo (``david'', ``myciel'',  ``input0''), cada algoritmo (``BB'' y ``CB'') y cada modelo(``Modelo Pedro'' y ``Modelo Santiago''). A su vez, cada archivo representa un grafo que lo particionamos de distintas maneras(``notrandom'', ``random0.2'', ``random0.4'', ``random0.8'', ``random1.0'').
+Realizamos uno de estos gráficos para cada uno de tres archivos (``david'', ``myciel3'',  ``input0''), cada algoritmo (``BB'' y ``CB'') y cada modelo (``Modelo Pedro'' y ``Modelo Santiago''). A su vez, cada archivo representa un grafo que lo particionamos de distintas maneras (``notrandom'', ``random0.2'', ``random0.4'', ``random0.8'', ``random1.0'').
 
 Esto genera una cantidad enorme de gráficos, y muchos de ellos no sumaban al informe y decidimos mostrar los más interesantes.
 
@@ -441,7 +457,7 @@ Estuvimos experimentando con CPLEX y no encontramos una manera clara de obtener 
 
 Nuestro pensamiento fue que dadas la manera de recorrer el árbol y la variable de corte, el tiempo que CPLEX tarda en recorrer el árbol está relacionado con la cantidad de nodos recorridos. 
 
-Con esto queremos decir que si restringimos los parámetros lo suficiente y solo dejamos libre un parámetro(por ejemplo, el algoritmo) vamos a poder saber cuál alternativa recorrió menos nodos.
+Con esto queremos decir que si restringimos los parámetros lo suficiente y solo dejamos libre un parámetro (por ejemplo, el algoritmo) vamos a poder saber cuál alternativa recorrió menos nodos.
 
 Por esto, por más que no hayamos podido medir con los datos crudos de los nodos recorridos, podemos llegar a una aproximación de cúales alternativas son mejores.
 
@@ -454,9 +470,9 @@ Este grafo presenta la particularidad de ser muy chico: 4 nodos y 4 aristas. Nue
 
 Como se puede ver en los gráficos, BB efectivamente tarda menos que CB. Sin embargo, no rindió muchos frutos ya que los distintos resultados brindaban tiempos similares, en el rango de los pocos milisegundos. Estos milisegundos de diferencia se pueden asignar a varias razones, inclusive al \emph{scheduling}. Variar algoritmos, modelos y particiones no brindó cambios importantes.
 
-\subsection{Experimentación de ``myciel''}
+\subsection{Experimentación de ``myciel3''}
 
-Luego, pasamos a experimentar con otro archivo: \emph{myciel}. Es un grafo con 11 nodos y 20 aristas. Similarmente que con \emph{input0}, \textit{myciel} tiene un tiempo comparable en CB y BB. Variar los distintos parámetros no puede hacer mejorar a CB lo suficiente como para lograr superar ampliamente a BB.
+Luego, pasamos a experimentar con otro archivo: \emph{myciel3}. Es un grafo con 11 nodos y 20 aristas. Similarmente que con \emph{input0}, \textit{myciel3} tiene un tiempo comparable en CB y BB. Variar los distintos parámetros no puede hacer mejorar a CB lo suficiente como para lograr superar ampliamente a BB.
 
 Es más, usando el Modelo Santiago BB logra ser más rápido que CB en el siguiente caso:
 
@@ -465,11 +481,11 @@ Es más, usando el Modelo Santiago BB logra ser más rápido que CB en el siguie
 
 Salvo la peor elección de BB es peor que la mejor elección de CB. Cabe aclarar que esto no sucede en el Modelo Pedro, y este último se comporta de manera mejor o igual usando CB.
 
-Al usar random la cantidad de particiones baja (ya que el tope es un color por nodo), y esto produce que tengamos que colorear unos pocos nodos. Por esto, \textit{myciel} tarda poco en correr (menos de un segundo) para las instancias que no son una partición por nodo.
+Al usar random la cantidad de particiones baja (ya que el tope es un color por nodo), y esto produce que tengamos que colorear unos pocos nodos. Por esto, \textit{myciel3} tarda poco en correr (menos de un segundo) para las instancias que no son una partición por nodo.
 
 \subsection{Experimentación de ``david''}
 
-\textit{David} es nuestra instacia más grande: 87 nodos 406 aristas. Presenta un panorama parecido a las demás: más particiones, más tiempo de ejecución. Debido al tamaño de esta instancia, acá podemos ver claramente el beneficio de usar CB.
+\textit{David} es una instacia más grande: 87 nodos 406 aristas. Presenta un panorama parecido a las demás: más particiones, más tiempo de ejecución. Debido al tamaño de esta instancia, acá podemos ver claramente el beneficio de usar CB.
 
 \diagramavfig{david_notrandom_1_bb_0_segunJuntada}{david notrandom usando Modelo Pedro y BB}
 \diagramavfig{david_notrandom_1_cb_0_segunJuntada}{david notrandom usando Modelo Pedro y CB}
@@ -484,17 +500,17 @@ Con \emph{david}, BB no logra terminar en menos de 50 segundos para ``notrandom'
 
 \subsubsection{Comparación entre modelos}
 
-El Modelo Pedro se comporta mejor que el Modelo Santiago en la mayoría de los casos. Incluso cuando se comporta peor, la diferencia es de unos pocos milisegundos. Observando detenidamente las salidas pudimos ver que la diferencia está en el tiempo que tarda en las iteraciones de planos de corte.
+El Modelo Pedro se comporta mejor que el Modelo Santiago en la mayoría de los casos. Incluso cuando se comporta peor, la diferencia es muy chica. Observando detenidamente las salidas pudimos ver que la diferencia está en el tiempo que tarda en las iteraciones de planos de corte.
 
 Modelo Pedro tarda un tiempo similar en CB respecto de BB, pero Modelo Santiago tarda aproximadamente diez veces más en esta parte del algoritmo. Curiosamente, ambos modelos terminan teniendo un tiempo similar al momento de realizar BB. De esta forma, Modelo Santiago tarda más al buscar los planos de corte pero termina llegando a un resultado similar que Modelo Pedro al momento de pasar a BB. Recordamos que estos resultados provienen de distintas semillas para asegurarnos que los resultados no son \textit{outliers}.
 
 Cabe aclarar que cuando un modelo no puede encontrar un resultado en el tiempo dado, el otro modelo tampoco lo puede hacer. Es decir, si bien Modelo Pedro tarda menos tiempo en correr, no pudimos encontrar casos donde un modelo se comporte muchísimo mejor que otro.
 
 \subsubsection{Variables de corte y recorrido del árbol}
-Para optimizar al máximo el tiempo de ejecución y la memoria consumida por CB y BB, experimentamos pasándole a CPLEX diferentes parámetros para efectuar el recorrido del árbol (\emph{Depth-first search} y \emph{Best-bound search}) y criterios de selección de la variable de corte (\emph{Minimum infeasibility}, \emph{CPLEX decide}, \emph{Maximum infeasibility}). En ningún caso vimos mejoras significativas al elegir uno u otra opción, sino que dependiendo del caso de test y del modelo utilizado para resolverlo, diferentes combinaciones de parámetros pueden dar diferentes (mejores y peores) resultados. De todas formas, estas variaciones son despreciables en comparación con las mejoras que obtuvimos al variar entre algoritmo de BB y CB.
+Para optimizar al máximo el tiempo de ejecución de CB y BB, experimentamos pasándole a CPLEX diferentes parámetros para efectuar el recorrido del árbol (\emph{Depth-first search} y \emph{Best-bound search}) y criterios de selección de la variable de corte (\emph{Minimum infeasibility}, \emph{CPLEX decide}, \emph{Maximum infeasibility}). En ningún caso vimos mejoras significativas al elegir uno u otra opción, sino que dependiendo del caso de test y del modelo utilizado para resolverlo, diferentes combinaciones de parámetros pueden dar diferentes (mejores y peores) resultados. De todas formas, estas variaciones son despreciables en comparación con las mejoras que obtuvimos al variar entre algoritmo de BB y CB.
 
 
-\subsubsection{Proporcion de particiones}
+\subsubsection{Proporción de particiones}
 Otro aspecto que nos pareció interesante analizar es la relación entre el tiempo de ejecución y la cantidad de particiones utilizada. A mayor cantidad de particiones, se deberá colorear una mayor cantidad de nodos, respetándose además las reglas de un coloreo particionado de grafos. Y, al tener más nodos coloreados, habrá que analizar una mayor cantidad de soluciones factibles y compararlas entre sí hasta encontrar una que sea la óptima. Por eso, es esperable que a mayor cantidad de particiones, mayor sea el tiempo de ejecución.
 
 Para esto, generamos los siguientes gráficos para un mismo caso de test, variando únicamente el porcentaje de particiones utilizado (20\%, 40\% y 80\%). Utilizamos \emph{david}, que consta de 87 nodos y 406 aristas. Notar que los gráficos no están escalados de forma proporcional, y es importante observar los tiempos que figuran en los mismos para poder compararlos correctamente.
@@ -503,7 +519,7 @@ Para esto, generamos los siguientes gráficos para un mismo caso de test, varian
 \diagramavfig{david_random_0.4_bb_0_segunJuntada}{david random 0.4 usando Modelo Pedro y BB}
 \diagramavfig{david_random_0.8_bb_0_segunJuntada}{david random 0.8 usando Modelo Pedro y BB}
 
-Se observa que a mayor porcenaje de particiones, mayor es el tiempo que tarda nuestro algoritmo. En particular, ya con un 80 \% de particiones, el se sobrepasa nuestro límite de tiempo, que es de 50 segundos. Además, en los tres casos se puede notar que no hay diferencias significativas al variar la variable de corte o la forma de recorrer el árbol.
+Observamos que a mayor porcenaje de particiones, mayor es el tiempo que tarda nuestro algoritmo. En particular ya con un 80 \% de particiones, se sobrepasa nuestro límite de tiempo que es de 50 segundos. Además, en los tres casos se puede notar que no hay diferencias significativas al variar la variable de corte o la forma de recorrer el árbol.
 
 \subsubsection{CB vs BB}
 En esta sección mostramos algunos resultados que muestran cómo nuestro algoritmo de CB mejora considerablemente para distintas instancias los tiempos de ejecución respecto al BB simple sin optimizaciones de CPLEX. 
@@ -527,43 +543,22 @@ Aquí se observa que cuanto mayor sea la cantidad de particiones, mayor es el ap
       \end{minipage}
   \end{minipage}
   
-En los dos casos anteiores, no se ven mejoras al utilizas CB en lugar de BB. Lo atribuimos a que input0 y myciel3 son instancias muy pequeñas (4 nodos, 4 aristas y 11 nodos, 20 aristas), lo cuál hace que no valga la pena gastar tiempo en buscar cortes ya que el problema tiene pocas restricciones y pocas variables, por lo que Simplex se demora aproximadamente lo mismo en resolver el MIP versus su relajación más el MIP algunos planos de corte extra. 
+En los dos casos anteiores, no se ven mejoras al utilizar CB en lugar de BB. Lo atribuímos a que input0 y myciel3 son instancias muy pequeñas (4 nodos, 4 aristas y 11 nodos, 20 aristas), lo cuál hace que no valga la pena gastar tiempo en buscar cortes ya que el problema tiene pocas restricciones y pocas variables, por lo que CPLEX se demora aproximadamente lo mismo en resolver el MIP versus su relajación más el MIP algunos planos de corte extra. 
 
+\subsection{Conclusiones}
 
+Para concluir queremos recalcar que el uso de nuestras heurísticas golosas en el \textit{Cut and Branch} lograron reducir el tiempo de ejecución frente al \textit{Branch and Bound} para las distintas instancias estudiadas, para ambos modelos contemplados.
 
-% TAMBIEN HABRIA QUE VER QUE CONSUMIMOS MENOS MEMORIA (NODOS?)
+Por otro lado, basándonos en las instancias estudiadas, el Modelo Pedro resultó tener tiempos de ejecución menores que Modelo Santiago.
 
-% ============================================ 
-	
-%TODO ver cuales agregamos
-
-%nombreArchivo / algoritmo / modelo (esto puede cambiarse de orden)
-
-%Dfs pareciera andar mejor
-%Cuando hay muchas particioned
-%en myciel se re ve eso
-%ahi tambien se re ve la diferencia entre cb y bb
-%y tambien esta bueno myciel para ver la diferencia entre 0.2 y 1 en % de particiones
-%input0 no se para que lo podriamos usar
-%para recorrido arbol tal vez
-
-
-
-%\subsection{Comparación Modelos}
-%\label{comparacion-modelos}
-
-%\subsection{Problemas encontrados}
-
-%\subsection{Conclusiones}
-
-
-
+Finalmente, queremos concluir que en nuestra experimentación, el hecho de modificar los parámetros de variables de corte y de recorrido del árbol  provistos por CPLEX no influyeron considerablemente en la reducción del tiempo de ejecución.
 
 \newpage
 
 \appendix
 
 \section{Código Relevante}
+\label{apendice-codigo}
 
 En esta sección vamos a mostrar los fragmentos de código más importantes de nuestra implementación.
 
@@ -755,15 +750,6 @@ for(int color = 0; color < P; color++) {
 		}
 }
 \end{lstlisting}
-
-
-\newpage
-
-\section{Resultados Extra}
-En esta sección queremos hablar de unos resultados que obtuvimos que nos llamaron la atención.
-
-
-
 
 \newpage
 

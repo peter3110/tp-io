@@ -19,7 +19,7 @@ def main():
     # prepararSegunRecorridoArbol()
     # prepararSegunVariableCorte()
 
-    # CBvsBB()
+    CBvsBB()
     CBvsBBDavid()
 
 def CBvsBB():
@@ -36,7 +36,6 @@ def CBvsBB():
                         
                         for semilla in ["123", "456", "789"]:
                             arch = "salidas/" + nombreArchivo + "_notrandom_1_" + algoritmo + "_0.1_0.1_" + numeroModelo + "_" + recorridoArbol + "_" + variableCorte + "_" + semilla + ".txt"
-                            print arch
                             total += float(dameDict(arch)["Resultados"]["tiempo total"])
 
                 listaValores.append(total / 3.0)
