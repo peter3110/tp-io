@@ -370,7 +370,7 @@ Tanto dameClique como dameAgujero son heurísticas golosas, que utilizamos para 
 
 La función dameClique es una función determinística. Originalmente, la llamábamos con el nodo de mayor peso. Esto generaba que realizar más de un llamado a dameClique no tenga sentido ya que devolvía siempre la misma clique. Por esto, decidimos buscar una clique con el nodo más pesado y el resto de las iteraciones comenzar desde un nodo elegido completamente al azar. Esto provoca que encuentre más restricciones, y como nos aseguramos de hacer un llamado con el nodo más pesado no encontramos menos que antes.
 
-%TODO grafico mostrando random
+%TODO grafico mostrando random vs no random?
 
 La función dameAgujero también es determinística por lo que realizar sucesivos llamados no devuelve nuevos agujeros. El problema con realizar la misma idea que con clique es que con agujero el número a encontrar para violar depende de la cantidad de nodos del agujero (En contraposición, clique siempre compara contra 1) Entonces, comenzar con un nodo con poco peso implica que podemos no llegar a encontrar ningún agujero que viole la desigualdad. Por esta razón, decidimos dejar solamente el algoritmo determinístico.
 
@@ -388,7 +388,7 @@ Realizamos uno de estos gráficos para cada combinación de archivo (``david'', 
 
 Esto genera una cantidad enorme de gráficos, y muchos de ellos no sumaban al informe y decidimos mostrar los más interesantes. Algunos de estos gráficos omitidos. se presentan en el Apéndice \ref{apendice-graficos} para mostrar algún que otro detalle.
 
-%TODO 50 SEGUNDOS TOPE
+%TODO 50 SEGUNDOS TOPE, habloar de las distintas semillas. Explicar que vamos a hablar de archivos, para luego pasar a comparaciones "longitudinales"
 
 \subsection{Partición de grafos}
 
@@ -409,11 +409,35 @@ Como se puede ver en los gráficos, BB efectivamente tarda menos que CB. Sin emb
 
 \subsection{Experimentación de ``myciel''}
 
-...hacer...
+Luego, pasamos a experimentar con otro archivo: \emph{myciel}. Es un grafo con 11 nodos y 20 aristas. Similarmente que con \emph{input0}, \textit{myciel} tiene un tiempo comparable en CB y BB. Variar los distintos parámetros no puede hacer mejorar a CB lo suficiente como para lograr superar ampliamente a BB.
+
+Es más, usando el Modelo Santiago BB logra ser más rápido que CB en el siguiente caso:
+
+\diagramavfig{myciel3_notrandom_1_bb_1_segunJuntada}{myciel3 notrandom usando Modelo Santiago y BB}
+\diagramavfig{myciel3_notrandom_1_cb_1_segunJuntada}{myciel3 notrandom usando Modelo Santiago y CB}
+
+Salvo la peor elección de BB es peor que la mejor elección de CB. Cabe aclarar que esto no sucede en el Modelo Pedro, y este último se comporta de manera mejor o igual usando CB.
+
+Al usar random la cantidad de particiones baja (ya que el tope es un color por nodo), y esto produce que tengamos que colorear unos pocos nodos. Por esto, \textit{myciel} tarda poco en correr (menos de un segundo) para las instancias que no son una partición por nodo.
 
 \subsection{Experimentación de ``david''}
 
-...hacer...
+\textit{David} es nuestra instacia más grande: 87 nodos 406 aristas. Presenta un panorama parecido a las demás: más particiones, más tiempo de ejecución. Debido al tamaño de esta instancia, acá podemos ver claramente el beneficio de usar CB.
+
+\diagramavfig{david_notrandom_1_bb_0_segunJuntada}{david notrandom usando Modelo Pedro y BB}
+\diagramavfig{david_notrandom_1_cb_0_segunJuntada}{david notrandom usando Modelo Pedro y CB}
+
+Recordamos que 50 segundos es el tope que corrimos por la instancia david, por lo que podría haber corrido todavía más tiempo. Por más que haya tardado 50 segundos, CB mejora 20 veces el tiempo de BB utilizando todas las diferentes maneras de recorrer el árbol y las distintas variables de corte.
+
+El modelo Santiago presenta mejoras significativas (tardando alrededor de 10 segundos), pero el Modelo Pedro supera una vez más el tiempo de ejecución.
+
+\subsection{Comparación entre modelos}
+
+El Modelo Pedro se comporta mejor que el Modelo Santiago en la mayoría de los casos. Incluso cuando se comporta peor, la diferencia es de unos pocos milisegundos. Observando detenidamente las salidas pudimos ver que la diferencia está en el tiempo que tarda en las iteraciones de planos de corte.
+
+Modelo Pedro tarda un tiempo similar en CB respecto de BB, pero Modelo Santiago tarda aproximadamente diez veces más en esta parte del algoritmo. Curiosamente, ambos modelos terminan teniendo un tiempo similar al momento de realizar BB. De esta forma, Modelo Santiago tarda más al buscar los planos de corte pero termina llegando a un resultado similar que Modelo Pedro al momento de pasar a BB. Recordamos que estos resultados provienen de distintas semillas para asegurarnos que los resultados no son \textit{outliers}.
+
+Cabe aclarar que cuando un modelo no puede encontrar un resultado en el tiempo dado, el otro modelo tampoco lo puede hacer. Es decir, si bien Modelo Pedro tarda menos tiempo en correr, no pudimos encontrar casos donde un modelo se comporte muchísimo mejor que otro.
 
 \subsection{Comparaciones longitudinales}
 
@@ -660,6 +684,12 @@ for(int color = 0; color < P; color++) {
 
 \section{Gráficos extra}
 \label{apendice-graficos}
+
+
+\newpage
+
+\section{Cómo correrlo}
+\label{como-correrlo}
 
 
 
