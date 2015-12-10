@@ -17,10 +17,10 @@ Porcentaje de aristas=0.11144
 Cantidad Particiones=74
 
 [Resultados]
-Funcion objetivo=36
-Tiempo en preparar=0.00492001
+Funcion objetivo=11
+Tiempo en preparar=0.0049932
 Tiempo en CB=0
-Tiempo en BB=175.539
-Tiempo Total=175.544
+Tiempo en BB=50.0053
+Tiempo Total=50.0103
 Cortes Clique=0
 Cortes Agujero=0
